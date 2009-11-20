@@ -358,6 +358,13 @@ void compile_word(FILE *in)
       eexit();
       state = 0;
     }
+  else if(!strcmp(word, "[CHAR]"))
+    {
+      next_word(in);
+      if(strlen(word) > 1)
+        error_unknown_word();
+      lit(word[0]);
+    }
   else if(is_number())
     lit(to_number());
   else
