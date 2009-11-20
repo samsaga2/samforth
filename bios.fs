@@ -1,6 +1,6 @@
 HEX
 
--- System vars
+\ System vars
 F3AE CONST LINL40
 F3AF CONST LINL32
 F3E9 CONST FORCLR

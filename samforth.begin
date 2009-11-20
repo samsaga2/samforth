@@ -511,3 +511,11 @@ SYSCALL:
         push bc
         ld bc,(PARAM_HL)
         NEXT
+
+        ;; EMIT         n --
+EMIT:   ld a,c
+        pop bc
+        exx
+        call CHPUT
+        exx
+        NEXT

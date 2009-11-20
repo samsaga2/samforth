@@ -64,19 +64,15 @@ int next_word(FILE *in)
   while(is_space(c));
 
   // skip comments
-  if(c=='-')
+  if(c=='\\')
     {
-      c = getc(in);
-      if(c=='-')
+      while (c!=13 && c!=10)
         {
-          while (c!=13 && c!=10)
-            {
-              c=getc(in);
-              if(c==EOF)
-                return 0;
-            }
-          return next_word(in);
+          c=getc(in);
+          if(c==EOF)
+            return 0;
         }
+      return next_word(in);
     }
 
   // read word
