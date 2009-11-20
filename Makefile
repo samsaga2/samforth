@@ -6,7 +6,7 @@ samc: samc.c
 test.rom: test.asm
 	~/builds/sjasm42b8/sjasm -j test.asm test.rom
 
-test.asm: test.fs samc
+test.asm: test.fs samc samforth.begin samforth.end
 	./samc test.fs > test.asm
 
 run: test.rom

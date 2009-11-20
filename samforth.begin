@@ -430,60 +430,84 @@ UNLOOP:	inc ix
 	;; MISC OPERATIONS ===========================
 
 	;; SYSCALL	a bc de hl address -- a bc de hl
-SYSCALL:
-        ld (TEMP),bc            ; save address
-        pop bc                
-        ld (TEMP+2),bc          ; save param hl
-        pop bc                  
-        ld (TEMP+4),bc          ; save param de
-        pop bc                  
-        ld (TEMP+6),bc          ; save param a
-        push de                 ; save de
-        push ix                 ; save ix
-	ld hl,.return           ; return addres
-	push hl
-        ld bc,(TEMP)            ; push address to call
-	push bc
-        ld a,(TEMP+2)           ; load hl
-        ld l,a
-        ld a,(TEMP+3)
-        ld h,a
-        ld a,(TEMP+4)           ; load de
-        ld e,a
-        ld a,(TEMP+5)
-        ld d,a
-        ld a,(TEMP+6)           ; load a
-	ret			; call (bc)
-.return:
-        ld (TEMP),bc            ; save output regs
-        ld (TEMP+2),a
-        ld c,e
-        ld b,d
-        ld (TEMP+4),bc
-        ld c,l
-        ld b,h
-        ld (TEMP+6),bc
-        pop ix                  ; restore de
-        pop de                  ; restore ix
+REG_DE EQU TEMP+0
+REG_IX EQU TEMP+2
+PARAM_ADDR EQU TEMP+4
+PARAM_A EQU TEMP+6
+PARAM_BC EQU TEMP+8
+PARAM_DE EQU TEMP+10
+PARAM_HL EQU TEMP+12
 
-	;; SYSCALL	a bc de hl address -- a bc de hl
-        pop bc                  ; drop PSP
-        ld a,(TEMP+2)           ; push a reg
-        ld c,a
+SYSCALL:
+        ; save bc
+        ld (PARAM_ADDR),bc
+        ; save ix
+        push ix
+        pop bc
+        ld (REG_IX),bc
+        ; save de
+        push de
+        pop bc
+        ld (REG_DE),bc
+        ; save param hl
+        pop bc
+        ld (PARAM_HL),bc
+        ; save param de
+        pop bc
+        ld (PARAM_DE),bc
+        ; save param BC
+        pop bc
+        ld (PARAM_BC),bc
+        ; save param a
+        pop bc
+        ld (PARAM_A),bc
+        ; prepare call
+        ld bc,.return
+        push bc
+        ld bc,(PARAM_ADDR)
+        push bc
+        ; get param hl
+        ld bc,(PARAM_HL)
+        ld l,c
+        ld h,b
+        ; get param de
+        ld bc,(PARAM_DE)
+        ld e,c
+        ld d,b
+        ; get param bc
+        ld bc,(PARAM_BC)
+        ; get param a
+        ld a,(PARAM_A)
+        ret
+.return:
+        ; store out bc
+        ld (PARAM_BC),bc
+        ; store out de
+        push de
+        pop bc
+        ld (PARAM_DE),bc
+        ; store out hl
+        push hl
+        pop hl
+        ld (PARAM_HL),hl
+        ; store out a
+        ld (PARAM_A),a
+
+        ; restore ix
+        ld bc,(REG_IX)
+        push bc
+        pop ix
+        ; restore de
+        ld bc,(REG_DE)
+        push bc
+        pop de
+        ; push regs
+        ld bc,(PARAM_A)
         ld b,0
         push bc
-        ld bc,(TEMP)            ; push bc reg
+        ld bc,(PARAM_BC)
         push bc
-        ld bc,(TEMP+4)          ; push de reg
+        ld bc,(PARAM_DE)
         push bc
-        ld bc,(TEMP+6)          ; push hl reg
-	NEXT
-
-	;; EMIT		n --
-EMIT:	ld a,c
-	pop bc
-	exx
-	call CHPUT
-	exx
-	NEXT
-        
+        ld bc,(PARAM_HL)
+        NEXT
