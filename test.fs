@@ -1,6 +1,14 @@
 INCLUDE kernel.fs
 INCLUDE bios.fs
 
+: BOLD ( -- )
+    127 3 LSHIFT 7 +
+    32 3 LSHIFT
+    DO
+        I VRAM@
+        DUP 1 RSHIFT OR I VRAM!
+    LOOP ;
+
 : REDEFINE-A ( -- )
     [CHAR] A 3 LSHIFT
     BIN 00000000 DEC OVER VRAM!
@@ -21,4 +29,5 @@ INCLUDE bios.fs
 : MAIN
     32 LINL32 C!
     INIT-MODE32 0 0 15 CHANGE-COLOR
+    BOLD
     REDEFINE-A MESSAGE ABORT ;

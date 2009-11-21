@@ -271,9 +271,15 @@ void interpret(FILE *in)
     create(in);
   else if(!strcmp(word, "EXIT"))
     eexit();
-  else if(!strcmp(word, ":ASM"))
+  else if(!strcmp(word, "ASM:"))
     {
       next_word(in);
+      char name[256];
+      strcpy(name, word);
+      next_word(in);
+      set_label(name, word);
+
+      printf("\t;; %s\n", name);
       printf("%s:\n", word);
       state = 2;
     }
@@ -373,31 +379,55 @@ void compile_word(FILE *in)
 
 void compile_asm(FILE *in)
 {
-  // next line
-  char line[256];
-  if(fgets(line, sizeof(line), in) == NULL)
-    error_eof();
-
-  // remove end blank spaces
-  int len=strlen(line);
-  for(int i=len-1; i>0 && line[i]<=32; i--)
-    line[i] = 0;
-
-  // write asm code
-  if(strlen(line) >= 4
-     && !strcmp(line+strlen(line)-4, "ASM;"))
+  int c = fgetc(in);
+  switch(c)
     {
-      if(strlen(line) >= 4)
+    case '(':
+      c=getc(in);
+      if(c!=' ' && c!='\t')
         {
-          line[strlen(line)-4] = 0;
-          puts(line);
+          putchar('(');
+          putchar(c);
         }
+      else
+        while (c!=')')
+          {
+            c=getc(in);
+            if(c==EOF)
+              error_eof();
+          }
+      break;
+      
+    case ';':
+      next_word(in);
+      if(!strcmp(word, "ASM"))
+        {
+          printf("\tNEXT\n");
+          state = 0;
+        }
+      else if(!strcmp(word, "ASMHL"))
+        {
+          printf("\tNEXTHL\n");
+          state = 0;
+        }
+      else
+        putchar(c);
+      break;
 
-      printf("\tNEXT\n");
-      state = 0;
+    case '\\':
+      while (c!=13 && c!=10)
+        {
+          c=getc(in);
+          if(c==EOF)
+            error_eof();
+        }
+      printf("\n");
+      break;
+
+    default:
+      putchar(c);
+      break;
     }
-  else
-    puts(line);
 }
 
 void compile(FILE *in)
@@ -453,7 +483,6 @@ void write_footer()
 
 int main(int argc, char **argv)
 {
-  set_label("?DUP", "QDUP");
   set_label(">R", "TOR");
   set_label("R>", "RFROM");
   set_label("R@", "RFETCH");
@@ -468,7 +497,13 @@ int main(int argc, char **argv)
   set_label("1+", "ONEPLUS");
   set_label("1-", "ONEMINUS");
   set_label("2*", "TWOSTAR");
+  set_label("2/", "TWOSLASH");
   set_label("+!", "PLUSSTORE");
+  set_label("0=", "ZEROEQUAL");
+  set_label("0<", "ZEROLESS");
+  set_label("=", "EQUAL");
+  set_label("<", "LESS");
+  set_label("U<", "ULESS");
   set_label("?BRANCH", "QBRANCH");
   set_label("(do)", "XDO");
   set_label("(loop)", "XLOOP");

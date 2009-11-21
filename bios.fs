@@ -23,6 +23,18 @@ F3EB CONST BDRCLR
 : VRAM! ( data address -- )
     >R 0 0 R> 004D SYSCALL 4DROP ;
 
+: FILL-VRAM ( data length address -- )
+    0 SWAP 0056 SYSCALL 4DROP ;
+
+: VRAM-TO-RAM ( length destination source -- )
+    >R >R >R 0 R> R> R> 0059 SYSCALL 4DROP ;
+
+: RAM-TO-VRAM ( length destination source -- )
+    >R >R >R 0 R> R> R> 005C SYSCALL 4DROP ;
+
+: CLEAR-SPRITES ( -- )
+    0 0 0 0 0069 SYSCALL 4DROP ;
+
 : CURSOR-POSITION ( column row -- )
     8 LSHIFT + >R
     0 0 0 R> 00C6 SYSCALL 4DROP ;
@@ -39,5 +51,17 @@ F3EB CONST BDRCLR
 
 : INIT-GRAPH ( -- )
     0 0 0 0 0072 SYSCALL 4DROP ;
+
+: INIT-MULTI ( -- )
+    0 0 0 0 0075 SYSCALL 4DROP ;
+
+: SPRITE-PATTERN ( spriteid -- address )
+    0 0 0 0084 SYSCALL NIP NIP NIP ;
+
+: SPRITE-ATTRIBUTE ( spriteid -- address )
+    0 0 0 0087 SYSCALL NIP NIP NIP ;
+
+: SPRITE-SIZE ( -- size )
+    0 0 0 0 008A SYSCALL 3DROP ;
 
 DEC
