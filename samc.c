@@ -177,7 +177,6 @@ void create(FILE *in)
     strcpy(label, "MAIN");
 
   printf("\n\t; %s\n%s:\n", word, label);
-  printf("\tcall DOCOLON\n.begin:\n");
 }
 
 void eexit()
@@ -268,7 +267,17 @@ void interpret(FILE *in)
   else if(!strcmp(word, "LIT"))
     lit(psp[--psp_index]);
   else if(!strcmp(word, "CREATE"))
-    create(in);
+    {
+      create(in);
+      printf("\tcall DOCOLON\n");
+      printf("\tdw LIT,.begin\n");
+      printf("\tdw EXIT\n");
+      printf(".begin:\n");
+    }
+  else if(!strcmp(word, ","))
+    printf("\tdw %d\n", psp[--psp_index]);
+  else if(!strcmp(word, "C,"))
+    printf("\tdb %d\n", psp[--psp_index]);    
   else if(!strcmp(word, "EXIT"))
     eexit();
   else if(!strcmp(word, "ASM:"))
@@ -286,6 +295,7 @@ void interpret(FILE *in)
   else if(!strcmp(word, ":"))
     {
       create(in);
+      printf("\tcall DOCOLON\n.begin:\n");
       state = 1;
     }
   else if(!strcmp(word, "("))

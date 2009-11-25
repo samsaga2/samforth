@@ -48,12 +48,12 @@ ASM: OVER OVER ( x y -- x y x )
 
 ASM: ROT ROT ( x y z -- y z x )
     pop hl \ y
-    ex (sp),hl \ y n stack, x in hl
+    ex (sp),hl \ y in stack, x in hl
     push bc
     ld b,h
     ld c,l
 ;ASM
-
+    
 ASM: >R TOR ( x-- ) ( R: -- x )
     dec ix \ push TOS into RST
     ld (ix+0),b
@@ -129,6 +129,20 @@ ASM: + PLUS ( n1/u1 n2/u2 -- n3/u3 )
     add hl,bc
     ld b,h
     ld c,l
+;ASM
+
+ASM: M+ MPLUS ( d n -- d )
+    ex de,hl
+    pop de \ hi cell
+    ex (sp),hl \ lo cell, save IP
+    add hl,bc
+    ld b,d \ hi result in BC (TOS)
+    ld c,e
+    jr nc,.mplus1
+    inc bc
+.mplus1:
+    pop de \ restore saved IP
+    push hl \ push lo result
 ;ASM
 
 ASM: - MINUS ( n1/u1 n2/u2 -- n3/u3 )
@@ -600,7 +614,122 @@ sdiff:  \ mismatch!  undo last 'cpi' increment
 snext:
 ;ASM
 
-\ MISC OPERATIONS ==========================================
+\ CONSTANTS ================================================
+
+ASM: S0 SZERO ( -- addr )
+    push bc
+    ld bc,PSP
+;ASM
+
+ASM: R0 RZERO ( -- addr )
+    push bc
+    ld bc,RSP
+;ASM
+
+\ ALIGNMENT AND PORTABILITY OPERATORS ======================
+: CELL ( -- n ) 2 ;
+
+ASM: CELL+ CELLPLUS ( addr1 -- addr2 )
+    inc bc
+    inc bc
+;ASM
+
+ASM: CELLS CELLS ( n1 -- n2 )
+    jp TWOSTAR
+;ASM
+
+ASM: CHAR+ CHARPLUS ( c-addr1 -- c-addr2 )
+    jp ONEPLUS
+;ASM
+
+ASM: CHARS CHARS ( n1 -- n2 )
+;ASM
+
+\ DOUBLE OPERATORS =========================================
+
+: 2@ ( addr -- x1 x2 )
+    DUP CELL+ @ SWAP @ ;
+
+: 2! ( x1 x2 addr -- )
+    SWAP OVER ! CELL+ ! ;
+
+: 2DROP ( x1 x2 -- )
+    DROP DROP ;
+
+: 2DUP ( x1 x2 -- x1 x2 x1 x2 )
+    OVER OVER ;
+
+: 2SWAP ( x1 x2 x3 x4 -- x3 x4 x1 x2 )
+    ROT >R ROT R> ;
+
+: 2OVER ( x1 x2 x3 x4 -- x1 x2 x3 x4 x1 x2 )
+    >R >R 2DUP R> R> 2SWAP ;
+
+\ ARITHMETIC OPERATORS =====================================
+
+: S>D ( n -- d )
+    DUP 0< ;
+
+: ?NEGATE ( n1 n2 -- n3 )
+    0< IF NEGATE THEN ;
+
+: ABS ( n1 -- +n2 )
+    DUP ?NEGATE ;
+
+: DNEGATE ( d1 -- d2 )
+    SWAP INVERT SWAP INVERT 1 M+ ;
+
+: ?DNEGATE ( d1 n -- d2 )
+    0< IF DNEGATE THEN ;
+
+: DABS ( d1 -- +d2 )
+    DUP ?DNEGATE ;
+
+: M* ( n1 n2 -- d )
+    2DUP XOR >R
+    SWAP ABS SWAP ABS UM*
+    R> ?DNEGATE ;
+
+: SM/REM ( d1 n1 -- n2 n3 )
+    2DUP XOR >R
+    OVER >R
+    ABS >R DABS R> UM/MOD
+    SWAP R> ?NEGATE
+    SWAP R> ?NEGATE ;
+
+: FM/MOD ( d1 n1 -- n2 n3 )
+    DUP >R
+    SM/REM
+    DUP 0< IF
+        SWAP R> +
+        SWAP 1-
+    ELSE R> DROP THEN ;
+
+: * ( n1 n2 -- n3 )
+    M* DROP ;
+
+: /MOD ( n1 n2 -- n3 n4 )
+    >R S>D R> FM/MOD ;
+
+: / ( n1 n2 -- n3 )
+    /MOD NIP ;
+
+: MOD ( n1 n2 -- n3 )
+    /MOD DROP ;
+
+: */MOD ( n1 n2 n3 -- n4 n5 )
+    >R M* R> FM/MOD ;
+
+: */ ( n1 n2 n3 -- n4 )
+    */MOD NIP ;
+
+: MAX ( n1 n2 -- n3 )
+    2DUP < IF SWAP THEN DROP ;
+
+: MIN ( n1 n2 -- n3 )
+    2DUP > IF SWAP THEN DROP ;
+
+\ INPUT/OUTPUT =============================================
 
 ASM: EMIT EMIT ( n -- )
     ld a,c
@@ -610,12 +739,25 @@ ASM: EMIT EMIT ( n -- )
     exx
 ;ASM
 
+: BL ( -- ) 32 EMIT ;
+
+: CR ( -- ) 13 EMIT 10 EMIT ;
+
+: SPACE ( -- ) 32 EMIT ;
+
+\ NUMERIC OUTPUT ===========================================
+
+: UD/MOD ( ud1 u2 -- u3 ud4 )
+    >R 0 R@ UM/MOD ROT ROT R> UM/MOD ROT ;
+
+: UD* ( ud1 d2 -- ud3 )
+    DUP >R UM* DROP SWAP R> UM* ROT + ;
+
+\ MISC OPERATIONS ==========================================
+
 : TYPE ( c-addr +n -- )
     ?DUP IF
         OVER + SWAP DO I C@ EMIT LOOP
     ELSE DROP THEN ;
-
-: BL ( -- ) 32 EMIT ;
-: CR ( -- ) 13 EMIT 10 EMIT ;
 
 : ABORT ( -- ) RECURSE ;
