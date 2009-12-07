@@ -324,12 +324,12 @@ ASM: BRANCH BRANCH
 ;ASMHL
 
 ASM: ?BRANCH QBRANCH ( x -- )
-        ld a,b
-        or c            	\ test old TOS
-        pop bc          	\ pop new TOS
-        jr z,BRANCH		\ if old TOS=0, branch
-        inc de          	\ else skip inline value
-        inc de
+    ld a,b
+    or c                \ test old TOS
+    pop bc          	\ pop new TOS
+    jr z,BRANCH		\ if old TOS=0, branch
+    inc de          	\ else skip inline value
+    inc de
 ;ASM
 
 ASM: (do) XDO ( n1|u1 n2|u2 --	R: -- sys1 sys2 )
@@ -731,6 +731,9 @@ ASM: CHARS CHARS ( n1 -- n2 )
 
 \ INPUT/OUTPUT =============================================
 
+: COUNT ( c-addr1 -- c-addr2 u counted->adr/len )
+    DUP CHAR+ SWAP C@ ;
+ 
 ASM: EMIT EMIT ( n -- )
     ld a,c
     pop bc
@@ -739,12 +742,26 @@ ASM: EMIT EMIT ( n -- )
     exx
 ;ASM
 
-: BL ( -- ) 32 EMIT ;
-
 : CR ( -- ) 13 EMIT 10 EMIT ;
 
-: SPACE ( -- ) 32 EMIT ;
+: BL ( -- ) 32 ;
 
+: SPACE ( -- ) BL EMIT ;
+
+: SPACES ( n -- )
+    BEGIN DUP WHILE SPACE 1- REPEAT DROP ;
+
+: UMIN ( u1 u2 -- u )
+    2DUP U> IF SWAP THEN DROP ;
+
+: UMAX ( u1 u2 -- u )
+    2DUP U< IF SWAP THEN DROP ;
+
+: TYPE ( c-addr +n -- )
+    ?DUP IF
+        OVER + SWAP DO I C@ EMIT LOOP
+    ELSE DROP THEN ;
+    
 \ NUMERIC OUTPUT ===========================================
 
 : UD/MOD ( ud1 u2 -- u3 ud4 )
@@ -754,10 +771,5 @@ ASM: EMIT EMIT ( n -- )
     DUP >R UM* DROP SWAP R> UM* ROT + ;
 
 \ MISC OPERATIONS ==========================================
-
-: TYPE ( c-addr +n -- )
-    ?DUP IF
-        OVER + SWAP DO I C@ EMIT LOOP
-    ELSE DROP THEN ;
 
 : ABORT ( -- ) RECURSE ;

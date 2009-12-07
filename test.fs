@@ -26,6 +26,7 @@ DEC
     8 [CHAR] A 3 LSHIFT test-char RAM-TO-VRAM ;
     
 : MESSAGE
+    5 spaces
     S" AAAAAAAAAAAAA" TYPE CR
     S" SamForth 2009" TYPE CR
     S" by Victor Marzo" TYPE CR
