@@ -1,159 +1,166 @@
-\ STACK OPERATIONS =========================================
-ASM: DUP DUP ( x -- x x )
-    push bc
-;ASM
+\ system variables =========================================
 
-ASM: ?DUP QDUP ( x -- 0 | x x )
+variable base
+variable hp
+128 array pad-buffer
+variable pad
+
+\ stack operations =========================================
+asm: dup dup ( x -- x x )
+    push bc
+;asm
+
+asm: ?dup qdup ( x -- 0 | x x )
     ld a,b
     or c
-    jr nz,DUP
-;ASM
+    jr nz,dup
+;asm
 
-ASM: DROP DROP ( x -- )
+asm: drop drop ( x -- )
     pop bc
-;ASM
+;asm
 
-ASM: 2DROP TWODROP ( x y -- )
+asm: 2drop twodrop ( x y -- )
     pop bc
     pop bc
-;ASM
+;asm
 
-ASM: 3DROP THREEDROP ( x y z -- )
+asm: 3drop threedrop ( x y z -- )
     pop bc
     pop bc
     pop bc
-;ASM
+;asm
 
-ASM: 4DROP FOURDROP ( x y z w -- )
+asm: 4drop fourdrop ( x y z w -- )
     pop bc
     pop bc
     pop bc
     pop bc
-;ASM
+;asm
 
-ASM: SWAP SWAP ( x y -- y x )
+asm: swap swap ( x y -- y x )
     pop hl
     push bc
     ld b,h
     ld c,l
-;ASM
+;asm
 
-ASM: OVER OVER ( x y -- x y x )
+asm: over over ( x y -- x y x )
     pop hl
     push hl
     push bc
     ld b,h
     ld c,l
-;ASM
+;asm
 
-ASM: ROT ROT ( x y z -- y z x )
+asm: rot rot ( x y z -- y z x )
     pop hl \ y
     ex (sp),hl \ y in stack, x in hl
     push bc
     ld b,h
     ld c,l
-;ASM
+;asm
     
-ASM: >R TOR ( x-- ) ( R: -- x )
+asm: >r tor ( x-- ) ( r: -- x )
     dec ix \ push TOS into RST
     ld (ix+0),b
     dec ix
     ld (ix+0),c
     pop bc \ pop new TOS
-;ASM
+;asm
 
-ASM: R> RFROM ( -- x ) ( R: x -- )
-    push bc \ push TOS
+asm: r> rfrom ( -- x ) ( r: x -- )
+    push bc \ push tos
     ld c,(ix+0) \ pop RST to TOS
     inc ix
     ld b,(ix+0)
     inc ix
-;ASM
+;asm
 
-ASM: R@ RFETCH ( -- x ) ( R: x -- x )
-    push bc \ push TOS
-    ld c,(ix+0) \ fetch RST to TOS
+asm: r@ rfetch ( -- x ) ( r: x -- x )
+    push bc \ push tos
+    ld c,(ix+0) \ fetch rst to TOS
     ld b,(ix+1)
-;ASM
+;asm
 
-: NIP ( x y -- y ) SWAP DROP ;
-: TUCK ( x y -- y x y ) SWAP OVER ;
+: nip ( x y -- y ) swap drop ;
+: tuck ( x y -- y x y ) swap over ;
 
-\ MEMORY OPERATIONS ========================================
-ASM: ! STORE ( n addr -- )
+\ memory operations ========================================
+asm: ! store ( n addr -- )
     ld h,b \ address in hl
     ld l,c
     pop bc \ data in bc
     ld (hl),c
     inc hl
     ld (hl),b
-    pop bc \ pop TOS
-;ASM
+    pop bc \ pop tos
+;asm
 
-ASM: C! CSTORE ( char addr -- )
+asm: c! cstore ( char addr -- )
     ld h,b \ addres in hl
     ld l,c
     pop bc \ data in bc
     ld (hl),c
-    pop bc \ pop TOS
-;ASM
+    pop bc \ pop tos
+;asm
 
-ASM: @ FETCH ( addr -- n )
+asm: @ fetch ( addr -- n )
     ld h,b \ address in hl
     ld l,c
     ld c,(hl)
     inc hl
     ld b,(hl)
-;ASM
+;asm
 
-ASM: C@ CFETCH ( addr -- char )
+asm: c@ cfetch ( addr -- char )
     ld a,(bc)
     ld c,a
     ld b,0
-;ASM
+;asm
 
-ASM: PC! PCSTORE ( char port -- )
-    pop hl \ char in L
+asm: pc! pcstore ( char port -- )
+    pop hl \ char in l
     out (c),l \ to port (c)
-    pop bc \ pop TOS
-;ASM
+    pop bc \ pop tos
+;asm
 
-ASM: PC@ PCFETCH ( port -- char )
+asm: pc@ pcfetch ( port -- char )
     in c,(c) \ read port (c) to c
     ld b,0
-;ASM
+;asm
 
-\ ARITHMETIC AND LOGICAL OPERATIONS ========================
-ASM: + PLUS ( n1/u1 n2/u2 -- n3/u3 )
+\ arithmetic and logical operations ========================
+asm: + plus ( n1/u1 n2/u2 -- n3/u3 )
     pop hl
     add hl,bc
     ld b,h
     ld c,l
-;ASM
+;asm
 
-ASM: M+ MPLUS ( d n -- d )
+asm: m+ mplus ( d n -- d )
     ex de,hl
     pop de \ hi cell
-    ex (sp),hl \ lo cell, save IP
+    ex (sp),hl \ lo cell, save ip
     add hl,bc
-    ld b,d \ hi result in BC (TOS)
+    ld b,d \ hi result in bc (tos)
     ld c,e
     jr nc,.mplus1
     inc bc
 .mplus1:
-    pop de \ restore saved IP
+    pop de \ restore saved ip
     push hl \ push lo result
-;ASM
+;asm
 
-ASM: - MINUS ( n1/u1 n2/u2 -- n3/u3 )
+asm: - minus ( n1/u1 n2/u2 -- n3/u3 )
     pop hl
     or a
     sbc hl,bc
     ld b,h
     ld c,l
-;ASM
+;asm
 
-ASM: AND AND ( x y -- x )
+asm: and and ( x y -- x )
     pop hl
     ld a,b
     and h
@@ -161,9 +168,9 @@ ASM: AND AND ( x y -- x )
     ld a,c
     and l
     ld c,a
-;ASM
+;asm
 
-ASM: OR OR ( x y -- x )
+asm: or or ( x y -- x )
     pop hl
     ld a,b
     or h
@@ -171,9 +178,9 @@ ASM: OR OR ( x y -- x )
     ld a,c
     or l
     ld c,a
-;ASM
+;asm
 
-ASM: XOR XOR ( x y -- x )
+asm: xor xor ( x y -- x )
     pop hl
     ld a,b
     xor h
@@ -181,18 +188,18 @@ ASM: XOR XOR ( x y -- x )
     ld a,c
     xor l
     ld c,a
-;ASM
+;asm
 
-ASM: INVERT INVERT ( x -- y )
+asm: invert invert ( x -- y )
     ld a,b
     cpl
     ld b,a
     ld a,c
     cpl
     ld c,a
-;ASM
+;asm
 
-ASM: NEGATE NEGATE ( x -- y )
+asm: negate negate ( x -- y )
     ld a,b
     cpl
     ld b,a
@@ -200,54 +207,54 @@ ASM: NEGATE NEGATE ( x -- y )
     cpl
     ld c,a
     inc bc
-;ASM
+;asm
 
-ASM: 1+ ONEPLUS ( n1/u1 -- n2/u2 )
+asm: 1+ oneplus ( n1/u1 -- n2/u2 )
     inc bc
-;ASM
+;asm
 
-ASM: 1- ONEMINUS ( n1/u1 -- n2/u2 )
+asm: 1- oneminus ( n1/u1 -- n2/u2 )
     dec bc
-;ASM
+;asm
 
-ASM: 2* TWOSTAR ( x -- y )
+asm: 2* twostar ( x -- y )
     sla c
     rl b
-;ASM
+;asm
 
-ASM: 2/ TWOSLASH ( x -- y )
+asm: 2/ twoslash ( x -- y )
     sra b
     rr c
-;ASM
+;asm
 
-ASM: LSHIFT LSHIFT ( x u -- y )
+asm: lshift lshift ( x u -- y )
     ld b,c \ b=loop counter
     pop hl
     inc b \ test for counter=0
     jr .lsh2
 .lsh1:
-    add hl,hl \ left shift HL, n times
+    add hl,hl \ left shift hl, n times
 .lsh2:
     djnz .lsh1
     ld b,h \ result
     ld c,l
-;ASM
+;asm
 
-ASM: RSHIFT RSHIFT ( x u -- y )
+asm: rshift rshift ( x u -- y )
     ld b,c			\ b=loop counter
     pop hl
     inc b			\ test for counter=0
     jr .rsh2
 .rsh1:
-    srl h			\ right shift HL, n times
+    srl h			\ right shift hl, n times
     rr l
 .rsh2:
     djnz .rsh1
     ld b,h			\ result
     ld c,l
-;ASM
+;asm
 
-ASM: +! PLUSSTORE ( n/u a-addr -- )
+asm: +! plusstore ( n/u a-addr -- )
     pop hl
     ld a,(bc)		\ low byte
     add a,l
@@ -256,39 +263,39 @@ ASM: +! PLUSSTORE ( n/u a-addr -- )
     ld a,(bc)		\ high byte
     adc a,h
     ld (bc),a
-    pop bc			\ pop TOS
-;ASM
+    pop bc			\ pop tos
+;asm
 
-\ COMPARISION OPERATIONS ===================================
-ASM: 0= ZEROEQUAL ( n -- flag )
+\ comparision operations ===================================
+asm: 0= zeroequal ( n -- flag )
     ld a,b
     or c                    \ result=0 if bc was 0
     sub 1                   \ cy set   if was 0
-    sbc a,a                 \ propagate cy through A
-    ld b,a                  \ oput 0000 or FFFF in TOS
+    sbc a,a                 \ propagate cy through a
+    ld b,a                  \ oput 0000 or ffff in tos
     ld c,a
-;ASM
+;asm
 
-ASM: 0< ZEROLES ( n -- flag )
+asm: 0< zeroless ( n -- flag )
     sla b                   \ sign bit -> cy flag
-    sbc a,a                 \ propagate cy through A
-    ld b,a                  \ put 0000 or FFFF in TOS
+    sbc a,a                 \ propagate cy through a
+    ld b,a                  \ put 0000 or ffff in tos
     ld c,a
-;ASM
+;asm
 
-ASM: = EQUAL ( x y -- flag )
+asm: = equal ( x y -- flag )
     pop hl
     or a
-    sbc hl,bc               \ x1-x2 in HL, SZVC valid
+    sbc hl,bc               \ x1-x2 in hl, szvc valid
     jr z,tostrue
 tosfalse:
     ld bc,0
     NEXT
 tostrue:
     ld bc,0ffffh
-;ASM
+;asm
 
-ASM: < LESS ( x y -- flag )
+asm: < less ( x y -- flag )
     pop hl
     or a
     sbc hl,bc
@@ -298,61 +305,61 @@ ASM: < LESS ( x y -- flag )
 .revsense:
     jp m,tosfalse
     ld bc,0ffffh
-;ASM
+;asm
 
-ASM: U< ULESS ( u1 u2 -- flag )
+asm: u< uless ( u1 u2 -- flag )
     pop hl
     or a
     sbc hl,bc
     sbc a,a
     ld b,a
     ld c,a
-;ASM
+;asm
 
 : <> ( x y -- flag ) = 0= ;
-: > ( x y -- flag) SWAP < ;
-: U> ( x y -- flag ) SWAP U< ;
+: > ( x y -- flag) swap < ;
+: u> ( x y -- flag ) swap u< ;
 
-\ LOOP AND BRANCH OPERATIONS ===============================
+\ loop and branch operations ===============================
 
-ASM: BRANCH BRANCH
-    ld a,(de)     		\  get inline value => IP
+asm: branch branch
+    ld a,(de)     		\  get inline value => ip
     ld l,a
     inc de
     ld a,(de)
     ld h,a
-;ASMHL
+;asmhl
 
-ASM: ?BRANCH QBRANCH ( x -- )
+asm: ?branch qbranch ( x -- )
     ld a,b
-    or c                \ test old TOS
-    pop bc          	\ pop new TOS
-    jr z,BRANCH		\ if old TOS=0, branch
+    or c                \ test old tos
+    pop bc          	\ pop new tos
+    jr z,branch		\ if old tos=0, branch
     inc de          	\ else skip inline value
     inc de
-;ASM
+;asm
 
-ASM: (do) XDO ( n1|u1 n2|u2 --	R: -- sys1 sys2 )
+asm: (do) xdo ( n1|u1 n2|u2 --	r: -- sys1 sys2 )
     ex de,hl
-    ex (sp),hl   		\ IP on stack, limit in HL
+    ex (sp),hl   		\ ip on stack, limit in hl
     ex de,hl
     ld hl,8000h
     or a
-    sbc hl,de    		\ 8000-limit in HL
+    sbc hl,de    		\ 8000-limit in hl
     dec ix       		\ push this fudge factor
     ld (ix+0),h  		\    onto return stack
-    dec ix       		\    for later use by 'I'
+    dec ix       		\    for later use by 'i'
     ld (ix+0),l
     add hl,bc    		\ add fudge to start value
     dec ix       		\ push adjusted start value
     ld (ix+0),h  		\    onto return stack
     dec ix       		\    as the loop index.
     ld (ix+0),l
-    pop de       		\ restore the saved IP
-    pop bc       		\ pop new TOS
-;ASM
+    pop de       		\ restore the saved ip
+    pop bc       		\ pop new tos
+;asm
 
-ASM: (loop) XLOOP ( R: sys1 sys2 -- | sys1 sys2 )
+asm: (loop) xloop ( r: sys1 sys2 -- | sys1 sys2 )
     exx
     ld bc,1
 looptst:
@@ -364,27 +371,27 @@ looptst:
     ld (ix+0),l  	\ save the updated index
     ld (ix+1),h
     exx
-    jr BRANCH		\ take the inline branch
+    jr branch		\ take the inline branch
 loopterm: 		\ terminate the loop
     ld bc,4      	\ discard the loop info
     add ix,bc
     exx
     inc de       	\ skip the inline branch
     inc de
-;ASM
+;asm
 
-ASM: (+loop) XPLUSLOOP ( n -- ) ( R: sys1 sys2 -- | sys1 sys2 )
-    pop hl      		\ this will be the new TOS
+asm: (+loop) xplusloop ( n -- ) ( r: sys1 sys2 -- | sys1 sys2 )
+    pop hl      		\ this will be the new tos
     push bc
     ld b,h
     ld c,l
     exx
-    pop bc      		\ old TOS = loop increment
+    pop bc      		\ old tos = loop increment
     jr looptst
-;ASM
+;asm
 
-ASM: I I ( -- n ) ( R: sys1 sys2 -- sys1 sys2 )
-    push bc     		\ push old TOS
+asm: i i ( -- n ) ( r: sys1 sys2 -- sys1 sys2 )
+    push bc     		\ push old tos
     ld l,(ix+0) 		\ get current loop index
     ld h,(ix+1)
     ld c,(ix+2) 		\ get fudge factor
@@ -393,10 +400,10 @@ ASM: I I ( -- n ) ( R: sys1 sys2 -- sys1 sys2 )
     sbc hl,bc   		\ subtract fudge factor,
     ld b,h      		\   returning true index
     ld c,l
-;ASM
+;asm
 
-ASM: J J ( -- n) ( R: 4*sys -- 4*sys )
-    push bc     		\ push old TOS
+asm: j j ( -- n) ( r: 4*sys -- 4*sys )
+    push bc     		\ push old tos
     ld l,(ix+4) 		\ get current loop index
     ld h,(ix+5)
     ld c,(ix+6) 		\ get fudge factor
@@ -405,22 +412,22 @@ ASM: J J ( -- n) ( R: 4*sys -- 4*sys )
     sbc hl,bc   		\ subtract fudge factor,
     ld b,h      		\   returning true index
     ld c,l
-;ASM
+;asm
 
-ASM: UNLOOP UNLOOP ( -- ) ( R: sys1 sys2 -- )
+asm: unloop unloop ( -- ) ( r: sys1 sys2 -- )
     inc ix
     inc ix
     inc ix
     inc ix
-;ASM
+;asm
 
-\ MULTIPLY AND DIVIDE ======================================
-ASM: UM* UMSTAR ( u1 u2 - ud )
+\ multiply and divide ======================================
+asm: um* umstar ( u1 u2 - ud )
     push bc
     exx
-    pop bc      \ u2 in BC
-    pop de      \ u1 in DE
-    ld hl,0     \ result will be in HLDE
+    pop bc      \ u2 in bc
+    pop de      \ u1 in de
+    ld hl,0     \ result will be in hlde
     ld a,17     \ loop counter
     or a        \ clear cy
 umloop:
@@ -436,39 +443,39 @@ noadd:
     push de     \ lo result
     push hl     \ hi result
     exx
-    pop bc      \ put TOS back in BC
-;ASM
+    pop bc      \ put tos back in bc
+;asm
 
-ASM: UM/MOD UMSLASHMOD ( ud u1 -- u2 u3 )
+asm: um/mod umslashmod ( ud u1 -- u2 u3 )
     push bc
     exx
-    pop bc      \ BC = divisor
-    pop hl      \ HLDE = dividend
+    pop bc      \ bc = divisor
+    pop hl      \ hlde = dividend
     pop de
     ld a,16     \ loop counter
     sla e
-    rl d        \ hi bit DE -> carry
+    rl d        \ hi bit de -> carry
 udloop:
     adc hl,hl   \ rot left w/ carry
     jr nc,udiv3
-    \ case 1: 17 bit, cy:HL = 1xxxx
+    \ case 1: 17 bit, cy:hl = 1xxxx
     or a        \ we know we can subtract
     sbc hl,bc
     or a        \ clear cy to indicate sub ok
     jr udiv4
-    \ case 2: 16 bit, cy:HL = 0xxxx
+    \ case 2: 16 bit, cy:hl = 0xxxx
 udiv3:
     sbc hl,bc   \ try the subtract
     jr nc,udiv4 \ if no cy, subtract ok
     add hl,bc   \ else cancel the subtract
     scf         \   and set cy to indicate
 udiv4:
-    rl e        \ rotate result bit into DE,
-    rl d        \ and next bit of DE into cy
+    rl e        \ rotate result bit into de,
+    rl d        \ and next bit of de into cy
     dec a
     jr nz,udloop
-    \ now have complemented quotient in DE,
-    \ and remainder in HL
+    \ now have complemented quotient in de,
+    \ and remainder in hl
     ld a,d
     cpl
     ld b,a
@@ -478,11 +485,11 @@ udiv4:
     push hl     \ push remainder
     push bc
     exx
-    pop bc      \ quotient remains in TOS
-;ASM
+    pop bc      \ quotient remains in tos
+;asm
 
-\ BLOCK AND STRING OPERATIONS ==============================
-ASM: FILL FILL ( addr u char -- )
+\ block and string operations ==============================
+asm: fill fill ( addr u char -- )
     ld a,c          \ character in a
     exx             \ use alt. register set
     pop bc          \ count in bc
@@ -500,10 +507,10 @@ ASM: FILL FILL ( addr u char -- )
     ldir            \   copy (hl)->(de)
 filldone:
     exx             \ back to main reg set
-    pop bc          \ pop new TOS
-;ASM
+    pop bc          \ pop new tos
+;asm
 
-ASM: CMOVE CMOVE ( c-addr1 c-addr2 u -- )
+asm: cmove cmove ( c-addr1 c-addr2 u -- )
     push bc
     exx
     pop bc      \ count
@@ -515,10 +522,10 @@ ASM: CMOVE CMOVE ( c-addr1 c-addr2 u -- )
     ldir        \ move from bottom to top
 cmovedone:
     exx
-    pop bc      \ pop new TOS
-;ASM
+    pop bc      \ pop new tos
+;asm
 
-ASM: CMOVE> CMOVEUP ( c-addr1 c-addr2 u --  )
+asm: cmove> cmoveup ( c-addr1 c-addr2 u --  )
     push bc
     exx
     pop bc      \ count
@@ -535,10 +542,10 @@ ASM: CMOVE> CMOVEUP ( c-addr1 c-addr2 u --  )
     lddr        \ move from top to bottom
 umovedone:
     exx
-    pop bc      \ pop new TOS
-;ASM
+    pop bc      \ pop new tos
+;asm
 
-ASM: SKIP SKIP ( c-addr u c -- c-addr' u' )
+asm: skip skip ( c-addr u c -- c-addr' u' )
     ld a,c      \ skip character
     exx
     pop bc      \ count
@@ -560,10 +567,10 @@ skipdone:
     push hl   \ updated address
     push bc     \ updated count
     exx
-    pop bc      \ TOS in bc
-;ASM
+    pop bc      \ tos in bc
+;asm
 
-ASM: SCAN SCAN ( c-addr u c -- c-addr' u' )
+asm: scan scan ( c-addr u c -- c-addr' u' )
     ld a,c      \ scan character
     exx
     pop bc      \ count
@@ -574,17 +581,17 @@ ASM: SCAN SCAN ( c-addr u c -- c-addr' u' )
     jr z,scandone
     ld a,e
     cpir        \ scan 'til match or count=0
-    jr nz,scandone  \ no match, BC & HL ok
+    jr nz,scandone  \ no match, bc & hl ok
     inc bc          \ match!  undo last to
     dec hl          \   point at match char
 scandone:
     push hl   \ updated address
     push bc     \ updated count
     exx
-    pop bc      \ TOS in bc
-;ASM
+    pop bc      \ tos in bc
+;asm
 
-ASM: S= SEQUAL ( c-addr1 c-addr2 u -- n )
+asm: s= sequal ( c-addr1 c-addr2 u -- n )
     push bc
     exx
     pop bc      \ count
@@ -606,170 +613,213 @@ smatch: \ count exhausted & no mismatch found
 sdiff:  \ mismatch!  undo last 'cpi' increment
     dec hl          \ point at mismatch char
     cp (hl)         \ set cy if char1 < char2
-    sbc a,a         \ propagate cy thru A
+    sbc a,a         \ propagate cy thru a
     exx
-    ld b,a          \ bc=FFFF if cy (s1<s2)
+    ld b,a          \ bc=ffff if cy (s1<s2)
     or 1            \ bc=0001 if ncy (s1>s2)
     ld c,a
 snext:
-;ASM
+;asm
 
-\ CONSTANTS ================================================
+\ constants ================================================
 
-ASM: S0 SZERO ( -- addr )
+asm: s0 szero ( -- addr )
     push bc
     ld bc,PSP
-;ASM
+;asm
 
-ASM: R0 RZERO ( -- addr )
+asm: r0 rzero ( -- addr )
     push bc
     ld bc,RSP
-;ASM
+;asm
 
-\ ALIGNMENT AND PORTABILITY OPERATORS ======================
-: CELL ( -- n ) 2 ;
+\ alignment and portability operators ======================
+: cell ( -- n ) 2 ;
 
-ASM: CELL+ CELLPLUS ( addr1 -- addr2 )
+asm: cell+ cellplus ( addr1 -- addr2 )
     inc bc
     inc bc
-;ASM
+;asm
 
-ASM: CELLS CELLS ( n1 -- n2 )
-    jp TWOSTAR
-;ASM
+asm: cells cells ( n1 -- n2 )
+    jp twostar
+;asm
 
-ASM: CHAR+ CHARPLUS ( c-addr1 -- c-addr2 )
-    jp ONEPLUS
-;ASM
+asm: char+ charplus ( c-addr1 -- c-addr2 )
+    jp oneplus
+;asm
 
-ASM: CHARS CHARS ( n1 -- n2 )
-;ASM
+asm: chars chars ( n1 -- n2 )
+;asm
 
-\ DOUBLE OPERATORS =========================================
+\ double operators =========================================
 
 : 2@ ( addr -- x1 x2 )
-    DUP CELL+ @ SWAP @ ;
+    dup cell+ @ swap @ ;
 
 : 2! ( x1 x2 addr -- )
-    SWAP OVER ! CELL+ ! ;
+    swap over ! cell+ ! ;
 
-: 2DROP ( x1 x2 -- )
-    DROP DROP ;
+: 2drop ( x1 x2 -- )
+    drop drop ;
 
-: 2DUP ( x1 x2 -- x1 x2 x1 x2 )
-    OVER OVER ;
+: 2dup ( x1 x2 -- x1 x2 x1 x2 )
+    over over ;
 
-: 2SWAP ( x1 x2 x3 x4 -- x3 x4 x1 x2 )
-    ROT >R ROT R> ;
+: 2swap ( x1 x2 x3 x4 -- x3 x4 x1 x2 )
+    rot >r rot r> ;
 
-: 2OVER ( x1 x2 x3 x4 -- x1 x2 x3 x4 x1 x2 )
-    >R >R 2DUP R> R> 2SWAP ;
+: 2over ( x1 x2 x3 x4 -- x1 x2 x3 x4 x1 x2 )
+    >r >r 2dup r> r> 2swap ;
 
-\ ARITHMETIC OPERATORS =====================================
+\ arithmetic operators =====================================
 
-: S>D ( n -- d )
-    DUP 0< ;
+: s>d ( n -- d )
+    dup 0< ;
 
-: ?NEGATE ( n1 n2 -- n3 )
-    0< IF NEGATE THEN ;
+: ?negate ( n1 n2 -- n3 )
+    0< if negate then ;
 
-: ABS ( n1 -- +n2 )
-    DUP ?NEGATE ;
+: abs ( n1 -- +n2 )
+    dup ?negate ;
 
-: DNEGATE ( d1 -- d2 )
-    SWAP INVERT SWAP INVERT 1 M+ ;
+: dnegate ( d1 -- d2 )
+    swap invert swap invert 1 m+ ;
 
-: ?DNEGATE ( d1 n -- d2 )
-    0< IF DNEGATE THEN ;
+: ?dnegate ( d1 n -- d2 )
+    0< if dnegate then ;
 
-: DABS ( d1 -- +d2 )
-    DUP ?DNEGATE ;
+: dabs ( d1 -- +d2 )
+    dup ?dnegate ;
 
-: M* ( n1 n2 -- d )
-    2DUP XOR >R
-    SWAP ABS SWAP ABS UM*
-    R> ?DNEGATE ;
+: m* ( n1 n2 -- d )
+    2dup xor >r
+    swap abs swap abs um*
+    r> ?dnegate ;
 
-: SM/REM ( d1 n1 -- n2 n3 )
-    2DUP XOR >R
-    OVER >R
-    ABS >R DABS R> UM/MOD
-    SWAP R> ?NEGATE
-    SWAP R> ?NEGATE ;
+: sm/rem ( d1 n1 -- n2 n3 )
+    2dup xor >r
+    over >r
+    abs >r dabs r> um/mod
+    swap r> ?negate
+    swap r> ?negate ;
 
-: FM/MOD ( d1 n1 -- n2 n3 )
-    DUP >R
-    SM/REM
-    DUP 0< IF
-        SWAP R> +
-        SWAP 1-
-    ELSE R> DROP THEN ;
+: fm/mod ( d1 n1 -- n2 n3 )
+    dup >r
+    sm/rem
+    dup 0< if
+        swap r> +
+        swap 1-
+    else r> drop then ;
 
 : * ( n1 n2 -- n3 )
-    M* DROP ;
+    m* drop ;
 
-: /MOD ( n1 n2 -- n3 n4 )
-    >R S>D R> FM/MOD ;
+: /mod ( n1 n2 -- n3 n4 )
+    >r s>d r> fm/mod ;
 
 : / ( n1 n2 -- n3 )
-    /MOD NIP ;
+    /mod nip ;
 
-: MOD ( n1 n2 -- n3 )
-    /MOD DROP ;
+: mod ( n1 n2 -- n3 )
+    /mod drop ;
 
-: */MOD ( n1 n2 n3 -- n4 n5 )
-    >R M* R> FM/MOD ;
+: */mod ( n1 n2 n3 -- n4 n5 )
+    >r m* r> fm/mod ;
 
 : */ ( n1 n2 n3 -- n4 )
-    */MOD NIP ;
+    */mod nip ;
 
-: MAX ( n1 n2 -- n3 )
-    2DUP < IF SWAP THEN DROP ;
+: max ( n1 n2 -- n3 )
+    2dup < if swap then drop ;
 
-: MIN ( n1 n2 -- n3 )
-    2DUP > IF SWAP THEN DROP ;
+: min ( n1 n2 -- n3 )
+    2dup > if swap then drop ;
 
-\ INPUT/OUTPUT =============================================
+\ input/output =============================================
 
-: COUNT ( c-addr1 -- c-addr2 u counted->adr/len )
-    DUP CHAR+ SWAP C@ ;
+: count ( c-addr1 -- c-addr2 u counted->adr/len )
+    dup char+ swap c@ ;
  
-ASM: EMIT EMIT ( n -- )
+asm: emit emit ( n -- )
     ld a,c
     pop bc
     exx
     call 00a2h
     exx
-;ASM
+;asm
 
-: CR ( -- ) 13 EMIT 10 EMIT ;
+: cr ( -- ) 13 emit 10 emit ;
 
-: BL ( -- ) 32 ;
+: bl ( -- ) 32 ;
 
-: SPACE ( -- ) BL EMIT ;
+: space ( -- ) bl emit ;
 
-: SPACES ( n -- )
-    BEGIN DUP WHILE SPACE 1- REPEAT DROP ;
+: spaces ( n -- )
+    begin dup while space 1- repeat drop ;
 
-: UMIN ( u1 u2 -- u )
-    2DUP U> IF SWAP THEN DROP ;
+: umin ( u1 u2 -- u )
+    2dup u> if swap then drop ;
 
-: UMAX ( u1 u2 -- u )
-    2DUP U< IF SWAP THEN DROP ;
+: umax ( u1 u2 -- u )
+    2dup u< if swap then drop ;
 
-: TYPE ( c-addr +n -- )
-    ?DUP IF
-        OVER + SWAP DO I C@ EMIT LOOP
-    ELSE DROP THEN ;
+: type ( c-addr +n -- )
+    ?dup if
+        over + swap do i c@ emit loop
+    else drop then ;
     
-\ NUMERIC OUTPUT ===========================================
+\ numeric output ===========================================
 
-: UD/MOD ( ud1 u2 -- u3 ud4 )
-    >R 0 R@ UM/MOD ROT ROT R> UM/MOD ROT ;
+: ud/mod ( ud1 u2 -- u3 ud4 )
+    >r 0 r@ um/mod rot rot r> um/mod rot ;
 
-: UD* ( ud1 d2 -- ud3 )
-    DUP >R UM* DROP SWAP R> UM* ROT + ;
+: ud* ( ud1 d2 -- ud3 )
+    dup >r um* drop swap r> um* rot + ;
 
-\ MISC OPERATIONS ==========================================
+: hold ( char -- )
+    -1 hp +! hp @ c! ;
 
-: ABORT ( -- ) RECURSE ;
+: <# ( -- )
+    pad hp ! ;
+
+hex
+
+: >digit ( n -- c )
+    dup 9 > 7 and + 30 + ;
+
+: # ( ud1 -- ud2 )
+    base @ ud/mod rot >digit hold ;
+
+: #s ( ud1 -- ud2 )
+    begin # 2dup or 0= until ;
+
+: #> ( ud1 -- c-addr u )
+    2drop hp @ pad over - ;
+
+: sign ( n -- )
+    0< if 2d hold then ;
+
+: u. ( u -- )
+    <# 0 #s #> type space ;
+
+: . ( n -- )
+    <# dup abs 0 #s rot sign #> type space ;
+
+decimal
+
+: decimal ( -- )
+    10 base ! ;
+
+: hex ( -- )
+    16 base ! ;
+
+: binary ( -- )
+    2 base ! ;
+
+: octal ( -- )
+    8 base ! ;
+
+\ misc operations ==========================================
+
+: abort ( -- ) recurse ;

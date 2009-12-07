@@ -1,67 +1,67 @@
-HEX
+hex
 
-\ System vars
-F3AE CONST LINL40
-F3AF CONST LINL32
-F3E9 CONST FORCLR
-F3EA CONST BAKCLR
-F3EB CONST BDRCLR
+\ system vars
+f3ae const linl40
+f3af const linl32
+f3e9 const forclr
+f3ea const bakclr
+f3eb const bdrclr
 
-: DISABLE-SCREEN ( -- )
-    0 0 0 0 0041 SYSCALL 4DROP ;
+: disable-screen ( -- )
+    0 0 0 0 0041 SYSCALL 4drop ;
 
-: ENABLE-SCREEN ( -- )
-    0 0 0 0 0044 SYSCALL 4DROP ;
+: enable-screen ( -- )
+    0 0 0 0 0044 SYSCALL 4drop ;
 
-: VDP! ( data register -- )
-    8 LSHIFT + >R
-    0 R> 0 0 0047 SYSCALL 4DROP ;
+: vdp! ( data register -- )
+    8 lshift + >r
+    0 r> 0 0 0047 SYSCALL 4drop ;
 
-: VRAM@ ( address -- data )
-    >R 0 0 0 R> 004A SYSCALL 3DROP ;
+: vram@ ( address -- data )
+    >r 0 0 0 r> 004a SYSCALL 3drop ;
 
-: VRAM! ( data address -- )
-    >R 0 0 R> 004D SYSCALL 4DROP ;
+: vram! ( data address -- )
+    >r 0 0 r> 004d SYSCALL 4drop ;
 
-: FILL-VRAM ( data length address -- )
-    0 SWAP 0056 SYSCALL 4DROP ;
+: fill-vram ( data length address -- )
+    0 swap 0056 SYSCALL 4drop ;
 
-: VRAM-TO-RAM ( length destination source -- )
-    >R >R >R 0 R> R> R> 0059 SYSCALL 4DROP ;
+: vram-to-ram ( length destination source -- )
+    >r >r >r 0 r> r> r> 0059 SYSCALL 4drop ;
 
-: RAM-TO-VRAM ( length destination source -- )
-    >R >R >R 0 R> R> R> 005C SYSCALL 4DROP ;
+: ram-to-vram ( length destination source -- )
+    >r >r >r 0 r> r> r> 005c SYSCALL 4drop ;
 
-: CLEAR-SPRITES ( -- )
-    0 0 0 0 0069 SYSCALL 4DROP ;
+: clear-sprites ( -- )
+    0 0 0 0 0069 SYSCALL 4drop ;
 
-: CURSOR-POSITION ( column row -- )
-    8 LSHIFT + >R
-    0 0 0 R> 00C6 SYSCALL 4DROP ;
+: cursor-position ( column row -- )
+    8 lshift + >r
+    0 0 0 r> 00c6 SYSCALL 4drop ;
 
-: CHANGE-COLOR ( bordercolor backgroundcolor foregroundcolor -- )
-    FORCLR C! BAKCLR C! BDRCLR C!
-    0 0 0 0 0062 SYSCALL 4DROP ;
+: change-color ( bordercolor backgroundcolor foregroundcolor -- )
+    forclr c! bakclr c! bdrclr c!
+    0 0 0 0 0062 SYSCALL 4drop ;
 
-: INIT-TEXT ( -- )
-    0 0 0 0 006C SYSCALL 4DROP ;
+: init-text ( -- )
+    0 0 0 0 006c SYSCALL 4drop ;
 
-: INIT-MODE32 ( -- )
-    0 0 0 0 006F SYSCALL 4DROP ;
+: init-mode32 ( -- )
+    0 0 0 0 006f SYSCALL 4drop ;
 
-: INIT-GRAPH ( -- )
-    0 0 0 0 0072 SYSCALL 4DROP ;
+: init-graph ( -- )
+    0 0 0 0 0072 SYSCALL 4drop ;
 
-: INIT-MULTI ( -- )
-    0 0 0 0 0075 SYSCALL 4DROP ;
+: init-multi ( -- )
+    0 0 0 0 0075 SYSCALL 4drop ;
 
-: SPRITE-PATTERN ( spriteid -- address )
-    0 0 0 0084 SYSCALL NIP NIP NIP ;
+: sprite-pattern ( spriteid -- address )
+    0 0 0 0084 SYSCALL nip nip nip ;
 
-: SPRITE-ATTRIBUTE ( spriteid -- address )
-    0 0 0 0087 SYSCALL NIP NIP NIP ;
+: sprite-attribute ( spriteid -- address )
+    0 0 0 0087 SYSCALL nip nip nip ;
 
-: SPRITE-SIZE ( -- size )
-    0 0 0 0 008A SYSCALL 3DROP ;
+: sprite-size ( -- size )
+    0 0 0 0 008a SYSCALL 3drop ;
 
-DEC
+decimal

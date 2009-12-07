@@ -10,6 +10,7 @@
 #define MAX_STRINGS 4000
 #define MAX_CONSTS 4000
 #define MAX_WORDS 4000
+#define MAX_VARS 4000
 
 char word[MAX_WORD_LEN];
 int labels=0;
@@ -37,7 +38,10 @@ char words[MAX_WORDS][MAX_WORD_LEN];
 char words_label[MAX_WORDS][MAX_WORD_LEN];
 int words_len=0;
 
-int freeram=0;
+int freeram=0xe500;
+char vars[MAX_VARS][MAX_WORD_LEN];
+int vars_value[MAX_VARS];
+int vars_len=0;
 
 void compile(FILE *in);
 
@@ -49,8 +53,12 @@ int is_space(int c)
 void translate()
 {
   for(int i=0; i<words_len; i++)
-    if(!strcasecmp(words[i], word))
+    if(!strcasecmp(words[i], word)) {
+      if(strcasecmp(word, words_label[i]))
+        printf("\t\t;%s=%s\n", word, words_label[i]);
       strcpy(word, words_label[i]);
+      break;
+    }
 }
 
 int next_word(FILE *in)
@@ -92,8 +100,6 @@ int next_word(FILE *in)
       *w++=c;
     }
   *w++=0;
-
-  translate();
 
   return 1;
 }
@@ -150,10 +156,8 @@ int to_number()
 
 int is_immediate()
 {
-  if(!strcasecmp(word, "HEX")
-     || !strcasecmp(word, "DEC")
-     || !strcasecmp(word, "BIN")
-     || !strcasecmp(word, "("))
+  if(!strcasecmp(word, "(")
+     || !strcasecmp(word, "["))
     return 1;
   else
     return 0;
@@ -190,6 +194,23 @@ void eexit()
 void lit(int value)
 {
   printf("\tdw LIT, %d\n", value);
+}
+
+int exists_var()
+{
+  for(int i=0; i<vars_len; i++)
+    if(!strcasecmp(vars[i], word))
+      return 1;
+  return 0;
+}
+
+int get_var()
+{
+  for(int i=0; i<vars_len; i++)
+    if(!strcasecmp(vars[i], word))
+      return vars_value[i];
+
+  error_unknown_word();
 }
 
 int exists_const()
@@ -237,14 +258,18 @@ void compile_string(FILE *in)
 
 void interpret(FILE *in)
 {
-  if(exists_const())
+  if(exists_var())
+    psp[psp_index++] = get_var();
+  else if(exists_const())
     psp[psp_index++] = get_const();
   else if(!strcasecmp(word, "HEX"))
     base = 16;
-  else if(!strcasecmp(word, "DEC"))
+  else if(!strcasecmp(word, "DECIMAL"))
     base = 10;
-  else if(!strcasecmp(word, "BIN"))
+  else if(!strcasecmp(word, "BINARY"))
     base = 2;
+  else if(!strcasecmp(word, "OCTAL"))
+    base = 8;
   else if(!strcasecmp(word, "["))
     state = 0;
   else if(!strcasecmp(word, "]"))
@@ -329,14 +354,16 @@ void interpret(FILE *in)
   else if(!strcasecmp(word, "VARIABLE"))
     {
       next_word(in);
-      printf("%s EQU FREERAM+%d\n", word, freeram);
+      strcpy(vars[vars_len++], word);
+      vars_value[vars_len-1]=freeram;
       freeram+=2;
     }
   else if(!strcasecmp(word, "ARRAY"))
     {
       int len = psp[--psp_index];
       next_word(in);
-      printf("%s EQU FREERAM+%d\n", word, freeram);
+      strcpy(vars[vars_len++], word);
+      vars_value[vars_len-1]=freeram;
       freeram+=len*2;
     }
   else if(is_number())
@@ -347,20 +374,24 @@ void interpret(FILE *in)
 
 void compile_word(FILE *in)
 {
-  if(exists_const())
+  translate();
+
+  if(exists_var())
+    lit(get_var());
+  else if(exists_const())
     lit(get_const());
   else if(is_immediate())
     interpret(in);
   else if(!strcasecmp(word, "IF"))
     {
       RSP_PUSH(labels);
-      printf("\tdw QBRANCH,label%d\n", labels++);
+      printf("\tdw qbranch,label%d\n", labels++);
     }
   else if(!strcasecmp(word, "ELSE"))
     {
       int label_n = RSP_POP();
       RSP_PUSH(labels);
-      printf("\tdw BRANCH,label%d\n", labels++);
+      printf("\tdw branch,label%d\n", labels++);
       printf("label%d:\n", label_n);
     }
   else if(!strcasecmp(word, "THEN"))
@@ -370,21 +401,28 @@ void compile_word(FILE *in)
     }
   else if(!strcasecmp(word, "DO"))
     {
-      printf("\tdw XDO\n");
+      printf("\tdw xdo\n");
       RSP_PUSH(labels);
       printf("label%d:\n", labels++);
     }
   else if(!strcasecmp(word, "LOOP"))
     {
       int label_n = RSP_POP();
-      printf("\tdw XLOOP,label%d\n", label_n);
+      printf("\tdw xloop,label%d\n", label_n);
     }
   else if(!strcasecmp(word, "S\""))
     compile_string(in);
+  else if(!strcasecmp(word, ".\""))
+    {
+      compile_string(in);
+      strcpy(word, "TYPE");
+      translate();
+      printf("\tdw %s\n", word);
+    }
   else if(!strcasecmp(word, "HERE"))
     printf("\tdw LIT,$-1\n");
   else if(!strcasecmp(word, "RECURSE"))
-    printf("\tdw BRANCH,.begin\n");
+    printf("\tdw branch,.begin\n");
   else if(!strcasecmp(word, ";"))
     {
       eexit();
@@ -405,11 +443,11 @@ void compile_word(FILE *in)
   else if(!strcasecmp(word, "UNTIL"))
     {
       int label_n = RSP_POP();
-      printf("\tdw NEGATE,QBRANCH,label%d\n", label_n);
+      printf("\tdw zeroequal,zeroequal,qbranch,label%d\n", label_n);
     }
   else if(!strcasecmp(word, "AGAIN"))
     {
-      printf("\tdw BRANCH,label%s\n", rsp[--rsp_index]);
+      printf("\tdw branch,label%s\n", rsp[--rsp_index]);
     }
   else if(!strcasecmp(word, "REPEAT"))
     {
@@ -417,7 +455,7 @@ void compile_word(FILE *in)
       int label_begin = RSP_POP();
       
       // again
-      printf("\tdw BRANCH,label%d\n", label_begin);
+      printf("\tdw branch,label%d\n", label_begin);
       
       // then
       printf("label%d:\n", label_while);
@@ -425,7 +463,7 @@ void compile_word(FILE *in)
   else if(!strcasecmp(word, "WHILE"))
     {
       RSP_PUSH(labels);
-      printf("\tdw QBRANCH,label%d\n", labels++);
+      printf("\tdw qbranch,label%d\n", labels++);
     }
   else if(is_number())
     lit(to_number());
@@ -539,32 +577,6 @@ void write_footer()
 
 int main(int argc, char **argv)
 {
-  set_label(">R", "TOR");
-  set_label("R>", "RFROM");
-  set_label("R@", "RFETCH");
-  set_label("!", "STORE");
-  set_label("C!", "CSTORE");
-  set_label("@", "FETCH");
-  set_label("C@", "CFETCH");
-  set_label("PC!", "PCSTORE");
-  set_label("PC@", "PCFECTH");
-  set_label("+", "PLUS");
-  set_label("-", "MINUS");
-  set_label("1+", "ONEPLUS");
-  set_label("1-", "ONEMINUS");
-  set_label("2*", "TWOSTAR");
-  set_label("2/", "TWOSLASH");
-  set_label("+!", "PLUSSTORE");
-  set_label("0=", "ZEROEQUAL");
-  set_label("0<", "ZEROLESS");
-  set_label("=", "EQUAL");
-  set_label("<", "LESS");
-  set_label("U<", "ULESS");
-  set_label("?BRANCH", "QBRANCH");
-  set_label("(do)", "XDO");
-  set_label("(loop)", "XLOOP");
-  set_label("(+loop)", "XPLUSLOOP");
-
   write_kernel();
   if(argc == 0)
     compile(stdin);
