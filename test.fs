@@ -1,8 +1,8 @@
 INCLUDE kernel.fs
 INCLUDE bios.fs
 
+create star-pattern
 binary
-create star-pattern 
 00000000 c,
 00000000 c,
 00000000 c,
@@ -11,22 +11,28 @@ create star-pattern
 00000000 c,
 00000000 c,
 00000000 c,
-00000000 c,
+hex
+6f c,
 decimal
 
 : char-vaddr ( c -- v-addr )
     3 lshift ;
 
+: char-color-vaddr ( c -- v-addr )
+    3 rshift [ hex ] 2000 [ decimal ] + ;
+
 : bold-font ( -- )
     127 char-vaddr 7 +
     32 char-vaddr
     do
-        i vram@
-        dup 1 rshift or i vram!
+        i vram@ dup 1 rshift or i vram!
     loop ;
 
 : redefine-char ( char addr -- )
-    >r 8 swap 3 lshift r> ram-to-vram ;
+    \ tile
+    2dup swap char-vaddr swap 8 -rot ram-to-vram
+    \ color
+    8 + c@ swap char-color-vaddr vram! ;
 
 : show-message
     ." **************************" cr

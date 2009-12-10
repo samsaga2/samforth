@@ -60,6 +60,9 @@ asm: rot rot ( x y z -- y z x )
     ld b,h
     ld c,l
 ;asm
+
+: -rot ( x y z -- z x y )
+    swap rot swap ;
     
 asm: >r tor ( x-- ) ( r: -- x )
     dec ix \ push TOS into RST
