@@ -52,13 +52,14 @@ int is_space(int c)
 
 void translate()
 {
-  for(int i=0; i<words_len; i++)
-    if(!strcasecmp(words[i], word)) {
-      if(strcasecmp(word, words_label[i]))
-        printf("\t\t;%s=%s\n", word, words_label[i]);
-      strcpy(word, words_label[i]);
-      break;
-    }
+  for(int i=words_len-1; i>=0; i--)
+    if(!strcasecmp(words[i], word))
+      {
+        if(strcasecmp(word, words_label[i]))
+          printf("\t\t;%s=%s\n", word, words_label[i]);
+        strcpy(word, words_label[i]);
+        break;
+      }
 }
 
 int next_word(FILE *in)
@@ -377,6 +378,11 @@ void interpret(FILE *in)
       strcpy(vars[vars_len++], word);
       vars_value[vars_len-1]=freeram;
       freeram+=len*2;
+    }
+  else if(!strcasecmp(word, "[CHAR]"))
+    {
+      next_word(in);
+      PSP_PUSH(word[0]);
     }
   else if(is_number())
     psp[psp_index++] = to_number();
