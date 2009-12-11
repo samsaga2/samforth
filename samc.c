@@ -131,7 +131,13 @@ void error_file_not_found(const char *filename)
 int is_number()
 {
   char *endptr;
-  long value = strtol(word, &endptr, base);
+  long value;
+  if(!strncmp(word, "0x", 2))
+    value = strtol(word+2, &endptr, 16);
+  else if(!strncmp(word, "0b", 2))
+    value = strtol(word+2, &endptr, 2);
+  else
+    value = strtol(word, &endptr, base);
   
   if((errno==ERANGE && (value==LONG_MAX || value==LONG_MIN))
      || errno!=0 && value==0
@@ -144,7 +150,13 @@ int is_number()
 
 int to_number()
 {
-  long value = strtol(word, NULL, base);
+  long value;
+  if(!strncmp(word, "0x", 2))
+    value = strtol(word+2, NULL, 16);
+  else if(!strncmp(word, "0b", 2))
+    value = strtol(word+2, NULL, 2);
+  else
+    value = strtol(word, NULL, base);
   
   if((errno==ERANGE && (value==LONG_MAX || value==LONG_MIN))
      || errno!=0 && value==0

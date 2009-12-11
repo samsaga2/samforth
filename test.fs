@@ -2,18 +2,15 @@ INCLUDE kernel.fs
 INCLUDE bios.fs
 
 create star-pattern
-binary
-00000000 c,
-00000000 c,
-00000000 c,
-00001111 c,
-11110000 c,
-00000000 c,
-00000000 c,
-00000000 c,
-hex
-6f c,
-decimal
+0b00000000 c,
+0b00000000 c,
+0b00000000 c,
+0b00001111 c,
+0b11110000 c,
+0b00000000 c,
+0b00000000 c,
+0b00000000 c,
+0x6f c,
 
 : char-vaddr ( c -- v-addr )
     3 lshift ;
