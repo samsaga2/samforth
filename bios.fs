@@ -1,5 +1,26 @@
 hex
 
+\ colors
+0 const COLOR-TRANSPARENT         
+1 const COLOR-BLACK               
+2 const COLOR-MEDIUM-GREEN        
+3 const COLOR-LIGHT-GREEN         
+4 const COLOR-DARK-BLUE           
+5 const COLOR-LIGHT-BLUE          
+6 const COLOR-DARK-RED            
+7 const COLOR-CYAN                
+8 const COLOR-MEDIUM-RED
+9 const COLOR-LIGHT-RED
+a const COLOR-DARK-YELLOW
+b const COLOR-LIGHT-YELLOW
+c const COLOR-DARK-GREEN
+d const COLOR-MAGENTA
+e const COLOR-GRAY
+f const COLOR-WHITE
+
+: color ( bg fg -- color )
+    8 lshift or ;
+
 \ system vars
 F380 const SYS-RDPRIM	\ Routine that reads from a primary slot
 F385 const SYS-WRPRIM	\ Routine that writes to a primary slot
