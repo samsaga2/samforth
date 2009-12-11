@@ -1,4 +1,4 @@
-all: samc test.rom
+all: samc test.rom test2.rom
 
 samc: samc.c
 	gcc -g samc.c -o samc -std=c99
@@ -22,5 +22,5 @@ test2: test2.rom
 	openmsx -cart test2.rom
 
 clear:
-	rm -f test.asm test.lst test.rom samc
+	rm -f test.asm test.lst test.rom test2.asm test2.lst test2.rom samc
 
