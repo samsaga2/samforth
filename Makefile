@@ -1,25 +1,22 @@
+SJASM=sjasm
+CC=gcc
+CFLAGS=-g -std=c99
+EMULATOR=openmsx -cart
+
 all: samc test.rom test2.rom
 
 samc: samc.c
-	gcc -g samc.c -o samc -std=c99
+	$(CC) $(CFLAGS) samc.c -o samc
 
-test.rom: test.asm
-	~/builds/sjasm42b8/sjasm -j test.asm test.rom
-
-test.asm: test.fs samc samforth.begin samforth.end
-	./samc test.fs > test.asm
-
-test2.rom: test2.asm
-	~/builds/sjasm42b8/sjasm -j test2.asm test2.rom
-
-test2.asm: test2.fs samc samforth.begin samforth.end
-	./samc test2.fs > test2.asm
+%.rom: %.fs
+	./samc $? > $(@:.rom=.asm)
+	$(SJASM) -j $(@:.rom=.asm) $@
 
 test: test.rom
-	openmsx -cart test.rom
+	$(EMULATOR) test.rom
 
 test2: test2.rom
-	openmsx -cart test2.rom
+	$(EMULATOR) test2.rom
 
 clear:
 	rm -f test.asm test.lst test.rom test2.asm test2.lst test2.rom samc
