@@ -896,85 +896,28 @@ c: octal ( -- )
 : abort ( -- ) recurse ;
 
 asm: SYSCALL
-	;; SYSCALL	a bc de hl address -- a bc de hl
-REG_DE EQU TEMP+0
-REG_IX EQU TEMP+2
-PARAM_ADDR EQU TEMP+4
-PARAM_A EQU TEMP+6
-PARAM_BC EQU TEMP+8
-PARAM_DE EQU TEMP+10
-PARAM_HL EQU TEMP+12
-
+	;; SYSCALL	af bc de hl address -- af bc de hl
 SYSCALL:
-        ; save bc
-        ld (PARAM_ADDR),bc
-        ; save ix
-        push ix
-        pop bc
-        ld (REG_IX),bc
-        ; save de
-        push de
-        pop bc
-        ld (REG_DE),bc
-        ; save param hl
-        pop bc
-        ld (PARAM_HL),bc
-        ; save param de
-        pop bc
-        ld (PARAM_DE),bc
-        ; save param BC
-        pop bc
-        ld (PARAM_BC),bc
-        ; save param a
-        pop bc
-        ld (PARAM_A),bc
-        ; prepare call
-        ld bc,.return
-        push bc
-        ld bc,(PARAM_ADDR)
-        push bc
-        ; get param hl
-        ld bc,(PARAM_HL)
-        ld l,c
-        ld h,b
-        ; get param de
-        ld bc,(PARAM_DE)
-        ld e,c
-        ld d,b
-        ; get param bc
-        ld bc,(PARAM_BC)
-        ; get param a
-        ld a,(PARAM_A)
-        ret
+    ld (ix-1),e ; save de reg
+    ld (ix-2),d
+    pop hl ; hl reg
+    pop de ; de reg
+    pop iy ; bc reg
+    pop af ; af reg
+    push ix ; save ix reg
+    ld ix,.return ; push return address
+    push ix
+    push bc ; push addr
+    push iy ; bc=iy
+    pop bc
+    ret
 .return:
-        ; store out bc
-        ld (PARAM_BC),bc
-        ; store out de
-        push de
-        pop bc
-        ld (PARAM_DE),bc
-        ; store out hl
-        push hl
-        pop hl
-        ld (PARAM_HL),hl
-        ; store out a
-        ld (PARAM_A),a
-
-        ; restore ix
-        ld bc,(REG_IX)
-        push bc
-        pop ix
-        ; restore de
-        ld bc,(REG_DE)
-        push bc
-        pop de
-        ; push regs
-        ld bc,(PARAM_A)
-        ld b,0
-        push bc
-        ld bc,(PARAM_BC)
-        push bc
-        ld bc,(PARAM_DE)
-        push bc
-        ld bc,(PARAM_HL)
+    pop ix ; restore ix reg
+    push af ; push regs to psp
+    push bc
+    push de
+    ld b,h
+    ld c,l
+    ld e,(ix-1) ; restore de reg
+    ld d,(ix-2)
 ;asm

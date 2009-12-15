@@ -109,13 +109,13 @@ FCC5 const SYS-SLTTBL	\ Mirror of slot 0 secondary slot selection register.
     0 r> 0 0 0047 SYSCALL 4drop ;
 
 : vram@ ( address -- data )
-    >r 0 0 0 r> 004a SYSCALL 3drop ;
+    >r 0 0 0 r> 004a SYSCALL 3drop 8 rshift ;
 
 : vram! ( data address -- )
-    >r 0 0 r> 004d SYSCALL 4drop ;
+    >r 8 lshift 0 0 r> 004d SYSCALL 4drop ;
 
 : fill-vram ( data length address -- )
-    0 swap 0056 SYSCALL 4drop ;
+    >r >r 8 lshift r> r> 0 swap 0056 SYSCALL 4drop ;
 
 : vram-to-ram ( length destination source -- )
     >r >r >r 0 r> r> r> 0059 SYSCALL 4drop ;
@@ -147,10 +147,10 @@ FCC5 const SYS-SLTTBL	\ Mirror of slot 0 secondary slot selection register.
     0 0 0 0 0075 SYSCALL 4drop ;
 
 : sprite-pattern ( spriteid -- address )
-    0 0 0 0084 SYSCALL nip nip nip ;
+    8 lshift 0 0 0 0084 SYSCALL nip nip nip ;
 
 : sprite-attribute ( spriteid -- address )
-    0 0 0 0087 SYSCALL nip nip nip ;
+    8 lshift 0 0 0 0087 SYSCALL nip nip nip ;
 
 : sprite-size ( -- size )
     0 0 0 0 008a SYSCALL 3drop ;

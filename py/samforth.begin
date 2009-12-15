@@ -25,8 +25,7 @@
 RAMBASE	equ 0e000h
 PSP	equ RAMBASE
 RSP	equ PSP+200h
-TEMP    equ PSP+400h
-FREERAM equ PSP+500h
+FREERAM equ PSP+200h
 
 	;; *** ROM HEADER ***
 	org 04000h
