@@ -1,4 +1,3 @@
-* FIX hardcoded words into samc.py (branch, xdo, xloop, zeroequal, qbranch)
 * add DOLIT to reduce code size of variables
 * interpreted conditionals and loops
 * add i: ;i for declare interpreted only functions (or implement immediate)
