@@ -308,51 +308,55 @@ class Forth:
         self.base = 10
         self.freeram = 0xe500
         self.strings = []
-
         self.words = []
+
         # self.words.append([ name , 0=>intepret/1=>compiled/2=>both , function , user args])
-        self.words.append(["\\", 2, word_comment, None])
-        self.words.append(["(", 2, word_comment2, None])
-        self.words.append([".", 0, word_dot, None])
-        self.words.append([".s", 0, word_dot_psp, None])
-        self.words.append(["+", 0, word_add, None])
-        self.words.append(["-", 0, word_sub, None])
-        self.words.append(["dup", 0, word_dup, None])
-        self.words.append(["drop", 0, word_drop, None])
-        self.words.append(["over", 0, word_over, None])
-        self.words.append([":", 0, word_declare, None])
-        self.words.append([";", 1, word_end_declare, None])
-        self.words.append(["c:", 0, word_declare, None])
-        self.words.append([";c", 1, word_end_cdeclare, None])
-        self.words.append(["asm:", 0, word_declare_asm, None])
-        self.words.append([">r", 0, word_tor, None])
-        self.words.append(["r>", 0, word_rfrom, None])
-        self.words.append(["create", 0, word_create, None])
-        self.words.append(["hex", 0, word_hex, None])
-        self.words.append(["binary", 0, word_binary, None])
-        self.words.append(["decimal", 0, word_decimal, None])
-        self.words.append(["recurse", 1, word_recurse, None])
-        self.words.append(["if", 1, word_if, None])
-        self.words.append(["then", 1, word_then, None])
-        self.words.append(["else", 1, word_else, None])
-        self.words.append(["do", 1, word_do, None])
-        self.words.append(["loop", 1, word_loop, None])
-        self.words.append(["begin", 1, word_begin, None])
-        self.words.append(["until", 1, word_until, None])
-        self.words.append(["again", 1, word_again, None])
-        self.words.append(["repeat", 1, word_repeat, None])
-        self.words.append(["while", 1, word_while, None])
-        self.words.append(["variable", 0, word_variable, None])
-        self.words.append(["array", 0, word_array, None])
-        self.words.append(["const", 0, word_const, None])
-        self.words.append(["INCLUDE", 0, word_include, None])
-        self.words.append(["c,", 0, word_cappend, None])
-        self.words.append([",", 0, word_append, None])
-        self.words.append(["s\"", 1, word_string, None])
-        self.words.append([".\"", 1, word_type_string, None])
-        self.words.append(["[char]", 0, word_char, None])
-        self.words.append(["[char]", 1, word_compile_char, None])
-        self.words.append(["[']", 1, word_append_addr, None])
+        words = [
+            ["\\", 2, word_comment, None],
+            ["(", 2, word_comment2, None],
+            [".", 0, word_dot, None],
+            [".s", 0, word_dot_psp, None],
+            ["+", 0, word_add, None],
+            ["-", 0, word_sub, None],
+            ["dup", 0, word_dup, None],
+            ["drop", 0, word_drop, None],
+            ["over", 0, word_over, None],
+            [":", 0, word_declare, None],
+            [";", 1, word_end_declare, None],
+            ["c:", 0, word_declare, None],
+            [";c", 1, word_end_cdeclare, None],
+            ["asm:", 0, word_declare_asm, None],
+            [">r", 0, word_tor, None],
+            ["r>", 0, word_rfrom, None],
+            ["create", 0, word_create, None],
+            ["hex", 0, word_hex, None],
+            ["binary", 0, word_binary, None],
+            ["decimal", 0, word_decimal, None],
+            ["recurse", 1, word_recurse, None],
+            ["if", 1, word_if, None],
+            ["then", 1, word_then, None],
+            ["else", 1, word_else, None],
+            ["do", 1, word_do, None],
+            ["loop", 1, word_loop, None],
+            ["begin", 1, word_begin, None],
+            ["until", 1, word_until, None],
+            ["again", 1, word_again, None],
+            ["repeat", 1, word_repeat, None],
+            ["while", 1, word_while, None],
+            ["variable", 0, word_variable, None],
+            ["array", 0, word_array, None],
+            ["const", 0, word_const, None],
+            ["INCLUDE", 0, word_include, None],
+            ["c,", 0, word_cappend, None],
+            [",", 0, word_append, None],
+            ["s\"", 1, word_string, None],
+            [".\"", 1, word_type_string, None],
+            ["[char]", 0, word_char, None],
+            ["[char]", 1, word_compile_char, None],
+            ["[']", 1, word_append_addr, None]
+        ]
+        for w in words:
+            self.words.append(w)
 
     def new_label(self):
         self.labels += 1
