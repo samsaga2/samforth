@@ -11,6 +11,15 @@ class UnableCompile(Exception):
     def __str__(self):
         return "Unable to compile `" + self.word + "'"
 
+def print_file(filename):
+    file = open(filename, "r")
+    while True:
+        line = file.readline()
+        if len(line) == 0:
+            break
+        print line,
+    file.close()
+
 def word_comment(input, forth, user_data):
     input.readline()
 
@@ -55,14 +64,21 @@ def word_drop(input, forth, user_data):
 
 def word_declare(input, forth, user_data):
     forth.state = 1
-    word = forth.next_word(input)
     forth.body = ""
 
-    label = forth.new_label()
+    # word name
+    word = forth.next_word(input)
+    if word == "main":
+        label = "MAIN"
+    else:
+        label = forth.new_label()
 
+    # word header
     print("\n\n\t; " + word)
     print(label+":")
     print("\tcall DOCOLON")
+
+    # add compilation func
     forth.words.append([word, 1, word_call, [label, word]])
 
 def word_interpret(input, forth, user_data):
@@ -86,9 +102,13 @@ def word_call(input, forth, user_data):
     print("\tdw " + user_data[0] + "\t; " + user_data[1])
 
 def word_declare_asm(input, forth, user_data):
-    word = forth.next_word(input)
     forth.body = ""
-    label = forth.new_label()
+
+    word = forth.next_word(input)
+    if word == "main":
+        label = "MAIN"
+    else:
+        label = forth.new_label()
 
     print("\n\n\t; " + word)
     print(label+":")
@@ -103,7 +123,15 @@ def word_declare_asm(input, forth, user_data):
             print("\tNEXTHL")
             break
         else:
-            print("\t"+line)
+            has_comment = line.find(";")
+            has_label = line.find(":")
+            is_label = len(line) > 0 and (line[0] == "." or has_label>0 and has_comment==-1 or has_label>0 and has_label<has_comment)
+            has_equ = line.lower().find(" equ ") > 0
+            
+            if is_label or has_equ:
+               print line
+            else:
+                print "\t" + line
 
 def word_tor(input, forth, user_data):
     n = forth.psp.pop()
@@ -149,7 +177,7 @@ def word_else(input, forth, user_data):
     
     forth.execute("branch", 1, input)
     print("\tdw " + new_label)
-    print(new_label + ":")
+    print(label + ":")
 
 def word_then(input, forth, user_data):
     label = forth.rsp.pop()
@@ -353,6 +381,12 @@ class Forth:
         word = self.find_word(word, state)
         word[0](input, self, word[1])
 
+    def add_header(self):
+        print_file("samforth.begin")
+
+    def add_footer(self):
+        print_file("samforth.end")
+
     def interpret(self, input=sys.stdin):
         state = 0
         while 1:
@@ -386,7 +420,12 @@ class Forth:
                     sys.stderr.write("Unknown word `"+word+"/" + str(self.state) + "'")
                     exit(1)
 
+    def compile(self):
+        self.add_header()
+        self.interpret()
+        self.add_strings()
+        self.add_footer()
+
 if __name__ == '__main__':
     f = Forth()
-    f.interpret()
-    f.add_strings()
+    f.compile()
