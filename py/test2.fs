@@ -268,7 +268,7 @@ create char-color
     nip redefine-pattern ;
 
 : redefine-char ( pattern char -- )
-    char-color swap redefine-tile ;
+    ['] char-color swap redefine-tile ;
 
 : clear-tiles
     0 0x2000 0x2000 fill-vram ;
