@@ -42,7 +42,7 @@ create star-pattern
     32 SYS-LINL32 c!
     init-mode32 0 0 15 change-color
     bold-font
-    [char] * star-pattern redefine-char ;
+    [char] * ['] star-pattern redefine-char ;
 
 : main
     init-screen show-message abort ;

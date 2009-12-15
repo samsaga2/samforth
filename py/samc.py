@@ -32,10 +32,10 @@ def word_comment2(input, forth, user_data):
 
 def word_dot(input, forth, user_data):
     n = forth.psp.pop()
-    print(str(n))
+    print str(n)
 
 def word_dot_psp(input, forth, user_data):
-    print(str(forth.psp))
+    print str(forth.psp)
 
 def word_add(input, forth, user_data):
     n1 = forth.psp.pop()
@@ -74,10 +74,10 @@ def word_declare(input, forth, user_data):
         label = forth.new_label()
 
     # word header
-    print("\n\n\t; " + word)
-    print(label+":")
-    print("\tcall DOCOLON")
-    print(".begin:")
+    print "\n\n\t; " + word
+    print label+":"
+    print "\tcall DOCOLON"
+    print ".begin:"
 
     # add compilation func
     forth.words.append([word, 1, word_call, [label, word]])
@@ -89,18 +89,18 @@ def word_interpret(input, forth, user_data):
     forth.state = state
 
 def word_end_declare(input, forth, user_data):
-    print("\tdw EXIT")
+    print "\tdw EXIT"
     forth.state = 0
     forth.body = forth.body[0:-1]
     forth.words.append([forth.words[-1][0], 0, word_interpret, forth.body])
 
 # create word only in compiled code, not interpret
 def word_end_cdeclare(input, forth, user_data):
-    print("\tdw EXIT")
+    print "\tdw EXIT"
     forth.state = 0
 
 def word_call(input, forth, user_data):
-    print("\tdw " + user_data[0] + "\t; " + user_data[1])
+    print "\tdw " + user_data[0] + "\t; " + user_data[1]
 
 def word_declare_asm(input, forth, user_data):
     forth.body = ""
@@ -111,17 +111,17 @@ def word_declare_asm(input, forth, user_data):
     else:
         label = forth.new_label()
 
-    print("\n\n\t; " + word)
-    print(label+":")
+    print "\n\n\t; " + word
+    print label+":"
     forth.words.append([word, 1, word_call, [label, word]])
     
     while 1:
         line = input.readline().strip()
         if line==";asm":
-            print("\tNEXT")
+            print "\tNEXT"
             break
         elif line==";asmhl":
-            print("\tNEXTHL")
+            print "\tNEXTHL"
             break
         else:
             has_comment = line.find(";")
@@ -147,8 +147,8 @@ def word_create(input, forth, user_data):
     forth.body = ""
     label = forth.new_label()
 
-    print("\n\n\t; " + word)
-    print(label+":")
+    print "\n\n\t; " + word
+    print label+":"
     forth.words.append([word, 1, word_call, [label, word]])
 
 def word_hex(input, forth, user_data):
@@ -162,13 +162,13 @@ def word_decimal(input, forth, user_data):
 
 def word_recurse(input, forth, user_data):
     forth.execute("branch", 1, input)
-    print("\tdw .begin\n");
+    print "\tdw .begin\n"
     
 def word_if(input, forth, user_data):
     label = forth.new_label()
     forth.rsp.append(label)
     forth.execute("?branch", 1, input)
-    print("\tdw " + label)
+    print "\tdw " + label
 
 def word_else(input, forth, user_data):
     label = forth.rsp.pop()
@@ -177,55 +177,55 @@ def word_else(input, forth, user_data):
     forth.rsp.append(new_label)
     
     forth.execute("branch", 1, input)
-    print("\tdw " + new_label)
-    print(label + ":")
+    print "\tdw " + new_label
+    print label + ":"
 
 def word_then(input, forth, user_data):
     label = forth.rsp.pop()
-    print(label + ":")
+    print label + ":"
 
 def word_do(input, forth, user_data):
     forth.execute("(do)", 1, input)
 
     label = forth.new_label()
     forth.rsp.append(label)
-    print(label + ":")
+    print label + ":"
 
 def word_loop(input, forth, user_data):
     forth.execute("(loop)", 1, input)
     label = forth.rsp.pop()
-    print("\tdw " + label)
+    print "\tdw " + label
 
 def word_begin(input, forth, user_data):
     label = forth.new_label()
     forth.rsp.append(label)
-    print(label + ":")
+    print label + ":"
 
 def word_until(input, forth, user_data):
     label = forth.rsp.pop()
     forth.execute("0=", 1, input)
     forth.execute("0=", 1, input)
     forth.execute("?branch", 1, input)
-    print("\tdw " + label)
+    print "\tdw " + label
 
 def word_again(input, forth, user_data):
     label = forth.rsp.pop()
     forth.execute("branch", 1, input)
-    print("\tdw " + label)
+    print "\tdw " + label
 
 def word_repeat(input, forth, user_data):
     label_while = forth.rsp.pop()
     label_begin = forth.rsp.pop()
 
     forth.execute("branch", 1, input)
-    print("\tdw " + label_begin)
-    print(label_while + ":")
+    print "\tdw " + label_begin
+    print label_while + ":"
 
 def word_while(input, forth, user_data):
     label = forth.new_label()
     forth.rsp.append(label)
     forth.execute("?branch", 1, input)
-    print("\tdw " + label)
+    print "\tdw " + label
 
 def word_variable(input, forth, user_data):
     word = forth.next_word(input)
@@ -244,7 +244,7 @@ def word_lit(input, forth, user_data):
     forth.psp.append(user_data)
 
 def word_lit_compile(input, forth, user_data):
-    print("\tdw LIT," + str(user_data))
+    print "\tdw LIT," + str(user_data)
 
 def word_const(input, forth, user_data):
     word = forth.next_word(input)
@@ -260,11 +260,11 @@ def word_include(input, forth, user_data):
 
 def word_cappend(input, forth, user_data):
     n = forth.psp.pop()
-    print("\tdb " + str(n))
+    print "\tdb " + str(n)
 
 def word_append(input, forth, user_data):
     n = forth.psp.pop()
-    print("\tdw " + str(n))
+    print "\tdw " + str(n)
 
 def word_string(input, forth, user_data):
     s = "";
@@ -279,7 +279,7 @@ def word_string(input, forth, user_data):
 
     label = forth.new_label()
     forth.strings.append([label, s])
-    print("\tdw LIT,"+label+",LIT,"+str(len(s)) + "; \"" + s + "\"")
+    print "\tdw LIT,"+label+",LIT,"+str(len(s)) + "; \"" + s + "\""
 
 def word_type_string(input, forth, user_data):
     word_string(input, forth, user_data)
@@ -291,7 +291,12 @@ def word_char(input, forth, user_data):
 
 def word_compile_char(input, forth, user_data):
     word = forth.next_word(input)
-    print("\tdw LIT," + str(ord(word)))
+    print "\tdw LIT," + str(ord(word))
+
+def word_append_addr(input, forth, user_data):
+    word = forth.next_word(input)
+    print "\tdw LIT"
+    forth.execute(word, 1, input)
     
 class Forth:
     def __init__(self):
@@ -347,6 +352,7 @@ class Forth:
         self.words.append([".\"", 1, word_type_string, None])
         self.words.append(["[char]", 0, word_char, None])
         self.words.append(["[char]", 1, word_compile_char, None])
+        self.words.append(["[']", 1, word_append_addr, None])
 
     def new_label(self):
         self.labels += 1
@@ -378,9 +384,9 @@ class Forth:
         return [None, None]
 
     def add_strings(self):
-        print("\n")
+        print "\n"
         for s in self.strings:
-            print(s[0] + ":\tdb \"" + s[1] + "\"")
+            print s[0] + ":\tdb \"" + s[1] + "\""
 
     def execute(self, word, state, input):
         word = self.find_word(word, state)
@@ -420,7 +426,7 @@ class Forth:
                     if self.state == 0:
                         self.psp.append(n)
                     elif self.state == 1:
-                        print("\tdw LIT,"+str(n))
+                        print "\tdw LIT,"+str(n)
                 except:
                     sys.stderr.write("Unknown word `"+word+"/" + str(self.state) + "'")
                     exit(1)
