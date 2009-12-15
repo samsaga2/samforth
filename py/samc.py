@@ -77,6 +77,7 @@ def word_declare(input, forth, user_data):
     print("\n\n\t; " + word)
     print(label+":")
     print("\tcall DOCOLON")
+    print(".begin:")
 
     # add compilation func
     forth.words.append([word, 1, word_call, [label, word]])
@@ -160,8 +161,8 @@ def word_decimal(input, forth, user_data):
     forth.base = 10
 
 def word_recurse(input, forth, user_data):
-    label = "label"+str(forth.labels);
-    print("\tdw " + label)
+    forth.execute("branch", 1, input)
+    print("\tdw .begin\n");
     
 def word_if(input, forth, user_data):
     label = forth.new_label()
@@ -242,10 +243,14 @@ def word_array(input, forth, user_data):
 def word_lit(input, forth, user_data):
     forth.psp.append(user_data)
 
+def word_lit_compile(input, forth, user_data):
+    print("\tdw LIT," + str(user_data))
+
 def word_const(input, forth, user_data):
     word = forth.next_word(input)
     n = forth.psp.pop()
-    forth.words.append([word, 2, word_lit, n])
+    forth.words.append([word, 0, word_lit, n])
+    forth.words.append([word, 1, word_lit_compile, n])
 
 def word_include(input, forth, user_data):
     word = forth.next_word(input)
@@ -274,7 +279,7 @@ def word_string(input, forth, user_data):
 
     label = forth.new_label()
     forth.strings.append([label, s])
-    print("\tdw LIT,"+label+",LIT,"+str(len(s)))
+    print("\tdw LIT,"+label+",LIT,"+str(len(s)) + "; \"" + s + "\"")
 
 def word_type_string(input, forth, user_data):
     word_string(input, forth, user_data)
@@ -334,7 +339,7 @@ class Forth:
         self.words.append(["while", 1, word_while, None])
         self.words.append(["variable", 0, word_variable, None])
         self.words.append(["array", 0, word_array, None])
-        self.words.append(["const", 2, word_const, None])
+        self.words.append(["const", 0, word_const, None])
         self.words.append(["INCLUDE", 0, word_include, None])
         self.words.append(["c,", 0, word_cappend, None])
         self.words.append([",", 0, word_append, None])
