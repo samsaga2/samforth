@@ -275,32 +275,32 @@ create char-color
 
 : redefine-tiles ( -- )
     clear-tiles
-    A-pattern [char] A redefine-char
-    B-pattern [char] B redefine-char
-    C-pattern [char] C redefine-char 
-    D-pattern [char] D redefine-char
-    E-pattern [char] E redefine-char
-    F-pattern [char] F redefine-char
-    G-pattern [char] G redefine-char 
-    H-pattern [char] H redefine-char
-    I-pattern [char] I redefine-char
-    J-pattern [char] J redefine-char
-    K-pattern [char] K redefine-char 
-    L-pattern [char] L redefine-char
-    M-pattern [char] M redefine-char
-    N-pattern [char] N redefine-char
-    O-pattern [char] O redefine-char 
-    P-pattern [char] P redefine-char
-    Q-pattern [char] Q redefine-char
-    R-pattern [char] R redefine-char
-    S-pattern [char] S redefine-char
-    T-pattern [char] T redefine-char
-    U-pattern [char] U redefine-char 
-    V-pattern [char] V redefine-char
-    W-pattern [char] W redefine-char
-    X-pattern [char] X redefine-char
-    Y-pattern [char] Y redefine-char
-    Z-pattern [char] Z redefine-char ;
+    ['] A-pattern [char] A redefine-char
+    ['] B-pattern [char] B redefine-char
+    ['] C-pattern [char] C redefine-char 
+    ['] D-pattern [char] D redefine-char
+    ['] E-pattern [char] E redefine-char
+    ['] F-pattern [char] F redefine-char
+    ['] G-pattern [char] G redefine-char 
+    ['] H-pattern [char] H redefine-char
+    ['] I-pattern [char] I redefine-char
+    ['] J-pattern [char] J redefine-char
+    ['] K-pattern [char] K redefine-char 
+    ['] L-pattern [char] L redefine-char
+    ['] M-pattern [char] M redefine-char
+    ['] N-pattern [char] N redefine-char
+    ['] O-pattern [char] O redefine-char 
+    ['] P-pattern [char] P redefine-char
+    ['] Q-pattern [char] Q redefine-char
+    ['] R-pattern [char] R redefine-char
+    ['] S-pattern [char] S redefine-char
+    ['] T-pattern [char] T redefine-char
+    ['] U-pattern [char] U redefine-char 
+    ['] V-pattern [char] V redefine-char
+    ['] W-pattern [char] W redefine-char
+    ['] X-pattern [char] X redefine-char
+    ['] Y-pattern [char] Y redefine-char
+    ['] Z-pattern [char] Z redefine-char ;
 
 : clear-screen
     0 0x1800 768 fill-vram ;
