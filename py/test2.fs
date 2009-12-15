@@ -270,7 +270,7 @@ create char-color
 : redefine-char ( pattern char -- )
     ['] char-color swap redefine-tile ;
 
-: clear-tiles
+: clear-tiles ( -- )
     0 0x2000 0x2000 fill-vram ;
 
 : redefine-tiles ( -- )
