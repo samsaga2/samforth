@@ -1,3 +1,5 @@
+* fix bug calling nested i: ;i functions (parse-name doesn't works well)
 * add DOLIT to reduce code size of variables
 * interpreted conditionals and loops
-* add i: ;i for declare interpreted only functions (or implement immediate)
+* implement does>
+

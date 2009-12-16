@@ -32,8 +32,11 @@ class CoreWords:
             [".s", 0, self.w_dot_psp],
             ["+", 0, self.w_add],
             ["-", 0, self.w_sub],
+            ["*", 0, self.w_mul],
+            ["/", 0, self.w_div],
             ["dup", 0, self.w_dup],
             ["drop", 0, self.w_drop],
+            ["swap", 0, self.w_swap],
             ["over", 0, self.w_over],
             [":", 0, self.w_declare],
             [";", 1, self.w_end_declare],
@@ -68,53 +71,71 @@ class CoreWords:
             [".\"", 1, self.w_type_string],
             ["[char]", 0, self.w_char],
             ["[char]", 1, self.w_compile_char],
-            ["[']", 1, self.w_append_addr]
+            ["[']", 1, self.w_append_addr],
+            ["parse-name", 0, self.w_parse_name],
+            ["evaluate", 0, self.w_evaluate]
         ]
         for w in words:
             self.forth.words.append(w)
 
-    def w_comment(self, input):
+    def w_comment(self, input, input_code):
         input.readline()
     
-    def w_comment2(self, input):
+    def w_comment2(self, input, input_code):
         while 1:
             word = self.forth.next_word(input)
             if word == ")":
                 break
     
-    def w_dot(self, input):
+    def w_dot(self, input, input_code):
         n = self.forth.psp.pop()
         sys.stderr.write(str(n) + "\n")
     
-    def w_dot_psp(self, input):
-        sys.stderr.write(str(self.forth.psp + "\n"))
+    def w_dot_psp(self, input, input_code):
+        sys.stderr.write(str(self.forth.psp) + "\n")
     
-    def w_add(self, input):
+    def w_add(self, input, input_code):
         n1 = self.forth.psp.pop()
         n2 = self.forth.psp.pop()
         self.forth.psp.append(n2+n1)
     
-    def w_sub(self, input):
+    def w_sub(self, input, input_code):
         n1 = self.forth.psp.pop()
         n2 = self.forth.psp.pop()
         self.forth.psp.append(n2-n1)
     
-    def w_dup(self, input):
+    def w_mul(self, input, input_code):
+        n1 = self.forth.psp.pop()
+        n2 = self.forth.psp.pop()
+        self.forth.psp.append(n2*n1)
+    
+    def w_div(self, input, input_code):
+        n1 = self.forth.psp.pop()
+        n2 = self.forth.psp.pop()
+        self.forth.psp.append(n2/n1)
+    
+    def w_dup(self, input, input_code):
         n = self.forth.psp.pop()
         self.forth.psp.append(n)
         self.forth.psp.append(n)
     
-    def w_over(self, input):
+    def w_over(self, input, input_code):
         n1 = self.forth.psp.pop()
         n2 = self.forth.psp.pop()
         self.forth.psp.append(n2)
         self.forth.psp.append(n1)
         self.forth.psp.append(n2)
     
-    def w_drop(self, input):
+    def w_drop(self, input, input_code):
         self.forth.psp.pop()
     
-    def w_declare(self, input):
+    def w_swap(self, input, input_code):
+        n1 = self.forth.psp.pop()
+        n2 = self.forth.psp.pop()
+        self.forth.psp.append(n1)
+        self.forth.psp.append(n2)
+    
+    def w_declare(self, input, input_code):
         self.forth.state = 1
     
         # word name
@@ -131,45 +152,51 @@ class CoreWords:
         self.forth.emit_asm(".begin:")
     
         # add compilation func
-        func = lambda input: self.w_call(input, label, word)
+        func = lambda input,input_code: self.w_call(input, input_code, label, word)
         self.forth.words.append([word, 1, func])
 
-    def w_ideclare(self, input):
+    def w_ideclare(self, input, input_code):
         name = self.forth.next_word(input)
         body = ""
         while 1:
             word = self.forth.next_word(input)
             if word == ";i":
                 break
+            elif word == "(":
+                while word != ")":
+                    word = self.forth.next_word(input)
+                continue
+            elif word == "\\":
+                input.readline()
+                continue
             else:
                 body += " " + word
 
         # add interpreted word
-        func = lambda input: self.w_interpret(input, body)
+        func = lambda input,input_code: self.w_interpret(input, input_code, body)
         self.forth.words.append([name, 0, func])
     
-    def w_interpret(self, input, code):
-        sys.stderr.write("INT:"+code)
+    def w_interpret(self, input, input_code, code):
         state = self.forth.state
         self.forth.state = 2
-        self.forth.interpret(StringIO.StringIO(code))
+        self.forth.interpret(input, StringIO.StringIO(code))
         self.forth.state = state
     
-    def w_end_declare(self, input):
+    def w_end_declare(self, input, input_code):
         self.forth.emit_asm("dw EXIT")
 
         # change to interpret state
         self.forth.state = 0
     
     # create word only in compiled code, not interpret
-    def w_end_cdeclare(self, input):
+    def w_end_cdeclare(self, input, input_code):
         self.forth.emit_asm("dw EXIT")
         self.forth.state = 0
     
-    def w_call(self, input, label, word):
+    def w_call(self, input, input_code, label, word):
         self.forth.emit_asm("dw " + label + "\t; " + word)
     
-    def w_declare_asm(self, input):
+    def w_declare_asm(self, input, input_code):
         word = self.forth.next_word(input)
         if word == "main":
             label = "MAIN"
@@ -179,7 +206,7 @@ class CoreWords:
         self.forth.emit_asm("\n\n\t; " + word)
         self.forth.emit_asm(label+":")
 
-        func = lambda input: self.w_call(input, label, word)
+        func = lambda input,input_code: self.w_call(input, input_code, label, word)
         self.forth.words.append([word, 1, func])
         
         while 1:
@@ -193,44 +220,44 @@ class CoreWords:
             else:
                 self.forth.emit_asm(line)
     
-    def w_tor(self, input):
+    def w_tor(self, input, input_code):
         n = self.forth.psp.pop()
         self.forth.rsp.append(n)
     
-    def w_rfrom(self, input):
+    def w_rfrom(self, input, input_code):
         n = self.forth.rsp.pop()
         self.forth.psp.append(n)
     
-    def w_create(self, input):
+    def w_create(self, input, input_code):
         word = self.forth.next_word(input)
         label = self.forth.new_label()
 
         self.forth.emit_asm("\n\n\t; " + word)
         self.forth.emit_asm(label+":")
 
-        func = lambda input: self.w_call(input, label, word)
+        func = lambda input,input_code: self.w_call(input, input_code, label, word)
         self.forth.words.append([word, 1, func])
     
-    def w_hex(self, input):
+    def w_hex(self, input, input_code):
         self.forth.base = 16
     
-    def w_binary(self, input):
+    def w_binary(self, input, input_code):
         self.forth.base = 2
     
-    def w_decimal(self, input):
+    def w_decimal(self, input, input_code):
         self.forth.base = 10
     
-    def w_recurse(self, input):
+    def w_recurse(self, input, input_code):
         self.forth.execute("branch", 1, input)
         self.forth.emit_asm("dw .begin")
         
-    def w_if(self, input):
+    def w_if(self, input, input_code):
         label = self.forth.new_label()
         self.forth.rsp.append(label)
         self.forth.execute("?branch", 1, input)
         self.forth.emit_asm("dw " + label)
     
-    def w_else(self, input):
+    def w_else(self, input, input_code):
         label = self.forth.rsp.pop()
     
         new_label = self.forth.new_label()
@@ -240,40 +267,40 @@ class CoreWords:
         self.forth.emit_asm("dw " + new_label)
         self.forth.emit_asm(label + ":")
     
-    def w_then(self, input):
+    def w_then(self, input, input_code):
         label = self.forth.rsp.pop()
         self.forth.emit_asm(label + ":")
     
-    def w_do(self, input):
+    def w_do(self, input, input_code):
         self.forth.execute("(do)", 1, input)
     
         label = self.forth.new_label()
         self.forth.rsp.append(label)
         self.forth.emit_asm(label + ":")
     
-    def w_loop(self, input):
+    def w_loop(self, input, input_code):
         self.forth.execute("(loop)", 1, input)
         label = self.forth.rsp.pop()
         self.forth.emit_asm("dw " + label)
     
-    def w_begin(self, input):
+    def w_begin(self, input, input_code):
         label = self.forth.new_label()
         self.forth.rsp.append(label)
         self.forth.emit_asm(label + ":")
     
-    def w_until(self, input):
+    def w_until(self, input, input_code):
         label = self.forth.rsp.pop()
         self.forth.execute("0=", 1, input)
         self.forth.execute("0=", 1, input)
         self.forth.execute("?branch", 1, input)
         self.forth.emit_asm("dw " + label)
     
-    def w_again(self, input):
+    def w_again(self, input, input_code):
         label = self.forth.rsp.pop()
         self.forth.execute("branch", 1, input)
         self.forth.emit_asm("dw " + label)
     
-    def w_repeat(self, input):
+    def w_repeat(self, input, input_code):
         label_while = self.forth.rsp.pop()
         label_begin = self.forth.rsp.pop()
     
@@ -281,63 +308,63 @@ class CoreWords:
         self.forth.emit_asm("dw " + label_begin)
         self.forth.emit_asm(label_while + ":")
     
-    def w_while(self, input):
+    def w_while(self, input, input_code):
         label = self.forth.new_label()
         self.forth.rsp.append(label)
         self.forth.execute("?branch", 1, input)
         self.forth.emit_asm("\tdw " + label)
     
-    def w_variable(self, input):
-        word = self.forth.next_word(input)
+    def w_variable(self, input, input_code):
+        word = self.forth.next_word(input_code)
         var = ": " + word + " " + hex(self.forth.freeram)  + " ;"
         self.forth.interpret(StringIO.StringIO(var))
         self.forth.freeram += 2
     
-    def w_array(self, input):
+    def w_array(self, input, input_code):
         len = self.forth.psp.pop()
-        word = self.forth.next_word(input)
+        word = self.forth.next_word(input_code)
         var = ": " + word + " " + hex(self.forth.freeram)  + " ;"
         self.forth.interpret(StringIO.StringIO(var))
         self.forth.freeram += len*2
     
-    def w_lit(self, input, value):
+    def w_lit(self, input, input_code, value):
         self.forth.psp.append(value)
     
-    def w_lit_compile(self, input, value):
+    def w_lit_compile(self, input, input_code, value):
         self.forth.emit_asm("dw LIT," + str(value))
     
-    def w_const(self, input):
-        word = self.forth.next_word(input)
+    def w_const(self, input, input_code):
+        word = self.forth.next_word(input_code)
         n = self.forth.psp.pop()
 
-        func = lambda input: self.w_lit(input, n)
+        func = lambda input,input_code: self.w_lit(input, input_code, n)
         self.forth.words.append([word, 0, func])
 
-        func = lambda input: self.w_lit_compile(input, n)
+        func = lambda input,input_code: self.w_lit_compile(input, input_code, n)
         self.forth.words.append([word, 1, func])
     
-    def w_include(self, input):
-        word = self.forth.next_word(input)
+    def w_include(self, input, input_code):
+        word = self.forth.next_word(input_code)
         file = open(word, 'r')
         self.forth.interpret(file)
         file.close()
     
-    def w_cappend(self, input):
+    def w_cappend(self, input, input_code):
         n = self.forth.psp.pop()
         self.forth.emit_asm("db " + str(n))
     
-    def w_append(self, input):
+    def w_append(self, input, input_code):
         n = self.forth.psp.pop()
         self.forth.emit_asm("dw " + str(n))
     
-    def w_string(self, input):
+    def w_string(self, input, input_code):
         s = "";
         while 1:
-            c = input.read(1)
+            c = input_code.read(1)
             if len(c) == 0 or c[0] == '"':
                 break
             elif c == '\\':
-                c = input.read(1)
+                c = input_code.read(1)
                 s += c
             s += c
     
@@ -345,22 +372,30 @@ class CoreWords:
         self.forth.strings.append([label, s])
         self.forth.emit_asm("dw LIT,"+label+",LIT,"+str(len(s)) + "; \"" + s + "\"")
     
-    def w_type_string(self, input):
-        self.w_string(input)
+    def w_type_string(self, input, input_code):
+        self.w_string(input, input_code)
         self.forth.execute("type", 1, input)
     
-    def w_char(self, input):
+    def w_char(self, input, input_code):
         word = self.forth.next_word(input)
-        self.forth.psp.push(ord(word))
+        self.forth.psp.append(ord(word))
     
-    def w_compile_char(self, input):
+    def w_compile_char(self, input, input_code):
         word = self.forth.next_word(input)
         self.forth.emit_asm("dw LIT," + str(ord(word)))
     
-    def w_append_addr(self, input):
+    def w_append_addr(self, input, input_code):
         word = self.forth.next_word(input)
         self.forth.emit_asm("dw LIT")
         self.forth.execute(word, 1, input)
+
+    def w_parse_name(self, input, input_code):
+        word = self.forth.next_word(input)
+        self.forth.psp.append(word)
+
+    def w_evaluate(self, input, input_code):
+        code = self.forth.psp.pop()
+        self.w_interpret(input, input_code, code)
         
 class Forth:
     def __init__(self):
@@ -418,9 +453,12 @@ class Forth:
         for s in self.strings:
             print s[0] + ":\tdb \"" + s[1] + "\""
 
-    def execute(self, word, state, input):
+    def execute(self, word, state, input, input_code=None):
+        if input_code == None:
+            input_code = input
+
         word = self.find_word(word, state)
-        word(input)
+        word(input, input_code)
 
     def add_header(self):
         print_file("samforth.begin")
@@ -428,10 +466,13 @@ class Forth:
     def add_footer(self):
         print_file("samforth.end")
 
-    def interpret(self, input=sys.stdin):
+    def interpret(self, input=sys.stdin, input_code=None):
+        if input_code == None:
+            input_code = input
+
         while 1:
             # get next word
-            word = self.next_word(input)
+            word = self.next_word(input_code)
             if word == None:
                 break
 
@@ -447,7 +488,7 @@ class Forth:
 
             if word_func != None:
                 # execute it
-                word_func(input)
+                word_func(input, input_code)
             else:
                 try:
                     # try literal
@@ -456,7 +497,7 @@ class Forth:
                     else:
                         n = int(word, self.base)
 
-                    if self.state == 0:
+                    if self.state == 0 or self.state == 2:
                         self.psp.append(n)
                     elif self.state == 1:
                         print "\tdw LIT,"+str(n)
