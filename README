@@ -17,6 +17,10 @@ Files:
 - test2.fs: simple example using screen 2
 - gforth.el: a modified version of gforth mode for emacs (added asm: ;asm c: ;c)
 
+Usage:
+python samc.py < example.fs > example.asm
+sjasm -j example.asm example.rom
+
 The compiler is far from a complete version of forth.
 
 For more info read kernel.fs, test.fs and test2.fs sources.
