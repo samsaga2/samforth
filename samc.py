@@ -84,10 +84,10 @@ class CoreWords:
     
     def w_dot(self, input):
         n = self.forth.psp.pop()
-        print str(n)
+        sys.stderr.write(str(n) + "\n")
     
     def w_dot_psp(self, input):
-        print str(self.forth.psp)
+        sys.stderr.write(str(self.forth.psp + "\n"))
     
     def w_add(self, input):
         n1 = self.forth.psp.pop()
@@ -126,10 +126,10 @@ class CoreWords:
             label = self.forth.new_label()
     
         # word header
-        print "\n\n\t; " + word
-        print label+":"
-        print "\tcall DOCOLON"
-        print ".begin:"
+        self.forth.emit_asm("\n\n\t; " + word)
+        self.forth.emit_asm(label+":")
+        self.forth.emit_asm("call DOCOLON")
+        self.forth.emit_asm(".begin:")
     
         # add compilation func
         func = lambda input: self.w_call(input, label, word)
@@ -142,7 +142,8 @@ class CoreWords:
         self.forth.state = state
     
     def w_end_declare(self, input):
-        print "\tdw EXIT"
+        self.forth.emit_asm("dw EXIT")
+
         self.forth.state = 0
         self.forth.body = self.forth.body[0:-1]
         func = lambda input: self.w_interpret(input, self.forth.body)
@@ -150,11 +151,11 @@ class CoreWords:
     
     # create word only in compiled code, not interpret
     def w_end_cdeclare(self, input):
-        print "\tdw EXIT"
+        self.forth.emit_asm("dw EXIT")
         self.forth.state = 0
     
     def w_call(self, input, label, word):
-        print "\tdw " + label + "\t; " + word
+        self.forth.emit_asm("dw " + label + "\t; " + word)
     
     def w_declare_asm(self, input):
         self.forth.body = ""
@@ -164,30 +165,23 @@ class CoreWords:
             label = "MAIN"
         else:
             label = self.forth.new_label()
-    
-        print "\n\n\t; " + word
-        print label+":"
+
+        self.forth.emit_asm("\n\n\t; " + word)
+        self.forth.emit_asm(label+":")
+
         func = lambda input: self.w_call(input, label, word)
         self.forth.words.append([word, 1, func])
         
         while 1:
             line = input.readline().strip()
             if line==";asm":
-                print "\tNEXT"
+                self.forth.emit_asm("NEXT")
                 break
             elif line==";asmhl":
-                print "\tNEXTHL"
+                self.forth.emit_asm("NEXTHL")
                 break
             else:
-                has_comment = line.find(";")
-                has_label = line.find(":")
-                is_label = len(line) > 0 and (line[0] == "." or has_label>0 and has_comment==-1 or has_label>0 and has_label<has_comment)
-                has_equ = line.lower().find(" equ ") > 0
-                
-                if is_label or has_equ:
-                   print line
-                else:
-                    print "\t" + line
+                self.forth.emit_asm(line)
     
     def w_tor(self, input):
         n = self.forth.psp.pop()
@@ -201,9 +195,10 @@ class CoreWords:
         word = self.forth.next_word(input)
         self.forth.body = ""
         label = self.forth.new_label()
-    
-        print "\n\n\t; " + word
-        print label+":"
+
+        self.forth.emit_asm("\n\n\t; " + word)
+        self.forth.emit_asm(label+":")
+
         func = lambda input: self.w_call(input, label, word)
         self.forth.words.append([word, 1, func])
     
@@ -218,13 +213,13 @@ class CoreWords:
     
     def w_recurse(self, input):
         self.forth.execute("branch", 1, input)
-        print "\tdw .begin\n"
+        self.forth.emit_asm("dw .begin")
         
     def w_if(self, input):
         label = self.forth.new_label()
         self.forth.rsp.append(label)
         self.forth.execute("?branch", 1, input)
-        print "\tdw " + label
+        self.forth.emit_asm("dw " + label)
     
     def w_else(self, input):
         label = self.forth.rsp.pop()
@@ -233,55 +228,55 @@ class CoreWords:
         self.forth.rsp.append(new_label)
         
         self.forth.execute("branch", 1, input)
-        print "\tdw " + new_label
-        print label + ":"
+        self.forth.emit_asm("dw " + new_label)
+        self.forth.emit_asm(label + ":")
     
     def w_then(self, input):
         label = self.forth.rsp.pop()
-        print label + ":"
+        self.forth.emit_asm(label + ":")
     
     def w_do(self, input):
         self.forth.execute("(do)", 1, input)
     
         label = self.forth.new_label()
         self.forth.rsp.append(label)
-        print label + ":"
+        self.forth.emit_asm(label + ":")
     
     def w_loop(self, input):
         self.forth.execute("(loop)", 1, input)
         label = self.forth.rsp.pop()
-        print "\tdw " + label
+        self.forth.emit_asm("dw " + label)
     
     def w_begin(self, input):
         label = self.forth.new_label()
         self.forth.rsp.append(label)
-        print label + ":"
+        self.forth.emit_asm(label + ":")
     
     def w_until(self, input):
         label = self.forth.rsp.pop()
         self.forth.execute("0=", 1, input)
         self.forth.execute("0=", 1, input)
         self.forth.execute("?branch", 1, input)
-        print "\tdw " + label
+        self.forth.emit_asm("dw " + label)
     
     def w_again(self, input):
         label = self.forth.rsp.pop()
         self.forth.execute("branch", 1, input)
-        print "\tdw " + label
+        self.forth.emit_asm("dw " + label)
     
     def w_repeat(self, input):
         label_while = self.forth.rsp.pop()
         label_begin = self.forth.rsp.pop()
     
         self.forth.execute("branch", 1, input)
-        print "\tdw " + label_begin
-        print label_while + ":"
+        self.forth.emit_asm("dw " + label_begin)
+        self.forth.emit_asm(label_while + ":")
     
     def w_while(self, input):
         label = self.forth.new_label()
         self.forth.rsp.append(label)
         self.forth.execute("?branch", 1, input)
-        print "\tdw " + label
+        self.forth.emit_asm("\tdw " + label)
     
     def w_variable(self, input):
         word = self.forth.next_word(input)
@@ -300,7 +295,7 @@ class CoreWords:
         self.forth.psp.append(value)
     
     def w_lit_compile(self, input, value):
-        print "\tdw LIT," + str(value)
+        self.forth.emit_asm("dw LIT," + str(value))
     
     def w_const(self, input):
         word = self.forth.next_word(input)
@@ -320,11 +315,11 @@ class CoreWords:
     
     def w_cappend(self, input):
         n = self.forth.psp.pop()
-        print "\tdb " + str(n)
+        self.forth.emit_asm("db " + str(n))
     
     def w_append(self, input):
         n = self.forth.psp.pop()
-        print "\tdw " + str(n)
+        self.forth.emit_asm("dw " + str(n))
     
     def w_string(self, input):
         s = "";
@@ -339,7 +334,7 @@ class CoreWords:
     
         label = self.forth.new_label()
         self.forth.strings.append([label, s])
-        print "\tdw LIT,"+label+",LIT,"+str(len(s)) + "; \"" + s + "\""
+        self.forth.emit_asm("dw LIT,"+label+",LIT,"+str(len(s)) + "; \"" + s + "\"")
     
     def w_type_string(self, input):
         self.w_string(input)
@@ -351,11 +346,11 @@ class CoreWords:
     
     def w_compile_char(self, input):
         word = self.forth.next_word(input)
-        print "\tdw LIT," + str(ord(word))
+        self.forth.emit_asm("dw LIT," + str(ord(word)))
     
     def w_append_addr(self, input):
         word = self.forth.next_word(input)
-        print "\tdw LIT"
+        self.forth.emit_asm("dw LIT")
         self.forth.execute(word, 1, input)
         
 class Forth:
@@ -373,6 +368,17 @@ class Forth:
     def new_label(self):
         self.labels += 1
         return "label"+str(self.labels);
+
+    def emit_asm(self, code):
+        has_comment = code.find(";")
+        has_label = code.find(":")
+        is_label = len(code) > 0 and (code[0] == "." or has_label>0 and has_comment==-1 or has_label>0 and has_label<has_comment)
+        has_equ = code.lower().find(" equ ") > 0
+        
+        if is_label or has_equ:
+            print code
+        else:
+            print "\t" + code
 
     def next_word(self, input):
         # skip whitespaces
