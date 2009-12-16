@@ -18,8 +18,8 @@ d const COLOR-MAGENTA
 e const COLOR-GRAY
 f const COLOR-WHITE
 
-: color ( bg fg -- color )
-    8 lshift or ;
+i: color ( fg bg -- color )
+    swap 16 * + ;i
 
 \ system vars
 F380 const SYS-RDPRIM	\ Routine that reads from a primary slot

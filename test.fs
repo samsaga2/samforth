@@ -1,16 +1,28 @@
 INCLUDE kernel.fs
 INCLUDE bios.fs
 
-create star-pattern 
-0b00000000 c,
-0b00000000 c,
-0b00000000 c,
-0b00001111 c,
-0b11110000 c,
-0b00000000 c,
-0b00000000 c,
-0b00000000 c,
-0x6f c,
+i: pattern
+    create
+    parse-name evaluate c,
+    parse-name evaluate c,
+    parse-name evaluate c,
+    parse-name evaluate c,
+    parse-name evaluate c,
+    parse-name evaluate c,
+    parse-name evaluate c,
+    parse-name evaluate c,
+    parse-name evaluate c, ;i
+
+pattern star-pattern
+0b00000000
+0b00000000
+0b00000000
+0b00001111
+0b11110000
+0b00000000
+0b00000000
+0b00000000
+0x6f
 
 : char-vaddr ( c -- v-addr )
     3 lshift ;
