@@ -1,7 +1,7 @@
 INCLUDE kernel.fs
 INCLUDE bios.fs
 
-create star-pattern
+create star-pattern 
 0b00000000 c,
 0b00000000 c,
 0b00000000 c,

@@ -37,6 +37,7 @@ class CoreWords:
             ["over", 0, self.w_over],
             [":", 0, self.w_declare],
             [";", 1, self.w_end_declare],
+            ["i:", 0, self.w_ideclare],
             ["c:", 0, self.w_declare],
             [";c", 1, self.w_end_cdeclare],
             ["asm:", 0, self.w_declare_asm],
@@ -80,7 +81,6 @@ class CoreWords:
             word = self.forth.next_word(input)
             if word == ")":
                 break
-        self.forth.body = self.forth.body[0:-1]
     
     def w_dot(self, input):
         n = self.forth.psp.pop()
@@ -116,7 +116,6 @@ class CoreWords:
     
     def w_declare(self, input):
         self.forth.state = 1
-        self.forth.body = ""
     
         # word name
         word = self.forth.next_word(input)
@@ -134,20 +133,33 @@ class CoreWords:
         # add compilation func
         func = lambda input: self.w_call(input, label, word)
         self.forth.words.append([word, 1, func])
+
+    def w_ideclare(self, input):
+        name = self.forth.next_word(input)
+        body = ""
+        while 1:
+            word = self.forth.next_word(input)
+            if word == ";i":
+                break
+            else:
+                body += " " + word
+
+        # add interpreted word
+        func = lambda input: self.w_interpret(input, body)
+        self.forth.words.append([name, 0, func])
     
     def w_interpret(self, input, code):
+        sys.stderr.write("INT:"+code)
         state = self.forth.state
-        self.forth.state = 0
+        self.forth.state = 2
         self.forth.interpret(StringIO.StringIO(code))
         self.forth.state = state
     
     def w_end_declare(self, input):
         self.forth.emit_asm("dw EXIT")
 
+        # change to interpret state
         self.forth.state = 0
-        self.forth.body = self.forth.body[0:-1]
-        func = lambda input: self.w_interpret(input, self.forth.body)
-        self.forth.words.append([self.forth.words[-1][0], 0, func])
     
     # create word only in compiled code, not interpret
     def w_end_cdeclare(self, input):
@@ -158,8 +170,6 @@ class CoreWords:
         self.forth.emit_asm("dw " + label + "\t; " + word)
     
     def w_declare_asm(self, input):
-        self.forth.body = ""
-    
         word = self.forth.next_word(input)
         if word == "main":
             label = "MAIN"
@@ -193,7 +203,6 @@ class CoreWords:
     
     def w_create(self, input):
         word = self.forth.next_word(input)
-        self.forth.body = ""
         label = self.forth.new_label()
 
         self.forth.emit_asm("\n\n\t; " + word)
@@ -355,15 +364,14 @@ class CoreWords:
         
 class Forth:
     def __init__(self):
-        self.state = 0 # 0 => interpret / 1 => compiling
-        self.psp = []
-        self.rsp = []
+        self.state = 0 # 0 => interpret / 1 => compiling / 2 => executing word
+        self.psp = [] # parameter stack
+        self.rsp = [] # return stack
         self.labels = 0
-        self.body = ""
         self.base = 10
-        self.freeram = 0xe500
+        self.freeram = 0xe500 # start of free ram
         self.strings = []
-        self.words = []
+        self.words = [] # words dictionary
 
     def new_label(self):
         self.labels += 1
@@ -421,18 +429,21 @@ class Forth:
         print_file("samforth.end")
 
     def interpret(self, input=sys.stdin):
-        state = 0
         while 1:
             # get next word
             word = self.next_word(input)
             if word == None:
                 break
-            self.body += " " + word
 
-            # find word
-            word_func = self.find_word(word, self.state)
-            if word_func == None:
-                word_func = self.find_word(word, 2)
+            if self.state == 2:
+                word_func = self.find_word(word, 0)
+                if word_func == None:
+                    word_func = self.find_word(word, 2)
+            else:
+                # find word
+                word_func = self.find_word(word, self.state)
+                if word_func == None:
+                    word_func = self.find_word(word, 2)
 
             if word_func != None:
                 # execute it
