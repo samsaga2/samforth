@@ -25,8 +25,7 @@
 RAMBASE	equ 0e000h
 PSP	equ RAMBASE
 RSP	equ PSP+200h
-TEMP    equ PSP+400h
-FREERAM equ PSP+500h
+FREERAM equ PSP+200h
 
 	;; *** ROM HEADER ***
 	org 04000h
@@ -84,88 +83,3 @@ INIT:
 	ld ix,RSP		; setup return stack
 	ld de,MAIN+3		; setup IP pointer to CFA MAIN
 	NEXT
-
-	;; LOOP AND BRANCH OPERATIONS ================
-
-	;; SYSCALL	a bc de hl address -- a bc de hl
-REG_DE EQU TEMP+0
-REG_IX EQU TEMP+2
-PARAM_ADDR EQU TEMP+4
-PARAM_A EQU TEMP+6
-PARAM_BC EQU TEMP+8
-PARAM_DE EQU TEMP+10
-PARAM_HL EQU TEMP+12
-
-SYSCALL:
-        ; save bc
-        ld (PARAM_ADDR),bc
-        ; save ix
-        push ix
-        pop bc
-        ld (REG_IX),bc
-        ; save de
-        push de
-        pop bc
-        ld (REG_DE),bc
-        ; save param hl
-        pop bc
-        ld (PARAM_HL),bc
-        ; save param de
-        pop bc
-        ld (PARAM_DE),bc
-        ; save param BC
-        pop bc
-        ld (PARAM_BC),bc
-        ; save param a
-        pop bc
-        ld (PARAM_A),bc
-        ; prepare call
-        ld bc,.return
-        push bc
-        ld bc,(PARAM_ADDR)
-        push bc
-        ; get param hl
-        ld bc,(PARAM_HL)
-        ld l,c
-        ld h,b
-        ; get param de
-        ld bc,(PARAM_DE)
-        ld e,c
-        ld d,b
-        ; get param bc
-        ld bc,(PARAM_BC)
-        ; get param a
-        ld a,(PARAM_A)
-        ret
-.return:
-        ; store out bc
-        ld (PARAM_BC),bc
-        ; store out de
-        push de
-        pop bc
-        ld (PARAM_DE),bc
-        ; store out hl
-        push hl
-        pop hl
-        ld (PARAM_HL),hl
-        ; store out a
-        ld (PARAM_A),a
-
-        ; restore ix
-        ld bc,(REG_IX)
-        push bc
-        pop ix
-        ; restore de
-        ld bc,(REG_DE)
-        push bc
-        pop de
-        ; push regs
-        ld bc,(PARAM_A)
-        ld b,0
-        push bc
-        ld bc,(PARAM_BC)
-        push bc
-        ld bc,(PARAM_DE)
-        push bc
-        ld bc,(PARAM_HL)
-        NEXT

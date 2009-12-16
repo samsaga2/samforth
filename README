@@ -1,0 +1,23 @@
+You need:
+- python 2.6 (http://python.org/)
+- sjasm (http://www.xl2s.tk/)
+- openmsx (http://openmsx.sourceforge.net/)
+
+Run the examples with:
+# make test
+# make test2
+
+Files:
+- samc.py: the forth compiler
+- samforth.begin: the asm header
+- samforth.end: the asm footer
+- kernel.fs: core words
+- bios.fs: some bios calls
+- test.fs: simple example using screen 1
+- test2.fs: simple example using screen 2
+- gforth.el: a modified version of gforth mode for emacs (added asm: ;asm c: ;c)
+
+The compiler is far from a complete version of forth.
+
+For more info read kernel.fs, test.fs and test2.fs sources.
+

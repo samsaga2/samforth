@@ -16,7 +16,7 @@ create star-pattern
     3 lshift ;
 
 : char-color-vaddr ( c -- v-addr )
-    3 rshift [ hex ] 2000 [ decimal ] + ;
+    3 rshift 0x2000 + ;
 
 : bold-font ( -- )
     127 char-vaddr 7 +
@@ -39,10 +39,10 @@ create star-pattern
     ." **************************" cr cr ;
 
 : init-screen
-    32 sys-linl32 c!
+    32 SYS-LINL32 c!
     init-mode32 0 0 15 change-color
     bold-font
-    [char] * star-pattern redefine-char ;
+    [char] * ['] star-pattern redefine-char ;
 
 : main
     init-screen show-message abort ;
