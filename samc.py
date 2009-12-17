@@ -149,7 +149,7 @@ class CoreWords:
         self.forth.emit_asm("\n\n\t; " + word)
         self.forth.emit_asm(label+":")
         self.forth.emit_asm("call DOCOLON")
-        self.forth.emit_asm(".begin:")
+        self.forth.rsp.append(label)
     
         # add compilation func
         func = lambda input,input_code: self.w_call(input, input_code, label, word)
@@ -183,6 +183,7 @@ class CoreWords:
         self.forth.state = state
     
     def w_end_declare(self, input, input_code):
+        self.forth.rsp.pop()
         self.forth.emit_asm("dw EXIT")
 
         # change to interpret state
@@ -190,6 +191,7 @@ class CoreWords:
     
     # create word only in compiled code, not interpret
     def w_end_cdeclare(self, input, input_code):
+        self.forth.rsp.pop()
         self.forth.emit_asm("dw EXIT")
         self.forth.state = 0
     
@@ -249,7 +251,9 @@ class CoreWords:
     
     def w_recurse(self, input, input_code):
         self.forth.execute("branch", 1, input)
-        self.forth.emit_asm("dw .begin")
+        label = self.forth.rsp.pop()
+        self.forth.rsp.append(label)
+        self.forth.emit_asm("dw "+label+"+3")
         
     def w_if(self, input, input_code):
         label = self.forth.new_label()
