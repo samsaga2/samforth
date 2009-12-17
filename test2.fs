@@ -308,7 +308,7 @@ variable cursor
     0 0 locate
     s" BY" type cr
     s" VICTOR MARZO" type cr cr
-    s"     USE LEFT AND RIGHT KEYS" type ;
+    s"     USE ARROW KEYS" type ;
 
 : init-screen ( -- )
     0 0 15 change-color
@@ -339,18 +339,31 @@ pattern sprite-pattern
     0 0 sprite-name!
     COLOR-WHITE 0 sprite-color! ;
 
+80 const sprite-speed
+
 : move-sprite
-    \ move sprite right
+    \ move sprite horiz
     sprite-x @
-    KEY-RIGHT key-status@ if
-        50 +
+    KEY-RIGHT is-key-pressed if
+        sprite-speed +
     then
-    KEY-LEFT key-status@ if
-        50 -
+    KEY-LEFT is-key-pressed if
+        sprite-speed -
     then
     dup sprite-x !
+    8 rshift
+    \ move sprite vert
+    sprite-y @
+    KEY-UP is-key-pressed if
+        sprite-speed -
+    then
+    KEY-DOWN is-key-pressed if
+        sprite-speed +
+    then
+    dup sprite-y !
+    8 rshift   
     \ set sprite pos
-    8 rshift sprite-y @ 8 rshift 0 sprite-pos!
+    0 sprite-pos!
     recurse ;
 
 : main

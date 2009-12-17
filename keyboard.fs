@@ -14,7 +14,7 @@ asm: keyboard-status@
 ;asm
 
 \ return 1 if the key is pressed
-: key-status@ ( key-bit key-line -- status )
+: is-key-pressed ( key-bit key-line -- status )
     keyboard-status@
     swap and
     if 0 else 1 then ;
