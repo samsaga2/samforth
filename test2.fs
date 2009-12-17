@@ -1,27 +1,8 @@
 INCLUDE kernel.fs
 INCLUDE bios.fs
-
-i: pattern
-    create
-    parse-name evaluate c,
-    parse-name evaluate c,
-    parse-name evaluate c,
-    parse-name evaluate c,
-    parse-name evaluate c,
-    parse-name evaluate c,
-    parse-name evaluate c,
-    parse-name evaluate c, ;i
-
-i: color-pattern
-    create
-    parse-name evaluate parse-name evaluate color c,
-    parse-name evaluate parse-name evaluate color c,
-    parse-name evaluate parse-name evaluate color c,
-    parse-name evaluate parse-name evaluate color c,
-    parse-name evaluate parse-name evaluate color c,
-    parse-name evaluate parse-name evaluate color c,
-    parse-name evaluate parse-name evaluate color c,
-    parse-name evaluate parse-name evaluate color c, ;i
+INCLUDE graphics.fs
+INCLUDE keyboard.fs
+INCLUDE sprites.fs
 
 pattern A-pattern
 0b11111100
@@ -268,27 +249,6 @@ COLOR-MEDIUM-RED COLOR-BLACK
 COLOR-MEDIUM-RED COLOR-BLACK
 COLOR-MEDIUM-RED COLOR-BLACK
 
-: char-vaddr ( c -- v-addr )
-    3 lshift ;
-
-: char-color-vaddr ( c -- v-addr )
-    3 lshift 0x2000 + ;
-
-: ram-to-3banks ( addr vaddr -- )
-    2dup swap 8 -rot LDIRVM
-    2dup 2048 + swap 8 -rot LDIRVM
-    4096 + swap 8 -rot LDIRVM ;
-
-: redefine-pattern ( addr char -- )
-    char-vaddr ram-to-3banks ;
-
-: redefine-color ( addr char -- )
-    char-color-vaddr ram-to-3banks ;
-
-: redefine-tile ( pattern color char -- )
-    2dup redefine-color
-    nip redefine-pattern ;
-
 : redefine-char ( pattern char -- )
     ['] char-color swap redefine-tile ;
 
@@ -324,9 +284,6 @@ COLOR-MEDIUM-RED COLOR-BLACK
     ['] Y-pattern [char] Y redefine-char
     ['] Z-pattern [char] Z redefine-char ;
 
-: clear-screen
-    0 0x1800 768 FILVRM ;
-
 variable cursor
 
 : locate ( x y -- )
@@ -353,28 +310,14 @@ variable cursor
     s" VICTOR MARZO" type cr cr
     s"     USE LEFT AND RIGHT KEYS" type ;
 
-: change-color ( bordercolor backgroundcolor foregroundcolor -- )
-    SYS-FORCLR c! SYS-BAKCLR c! SYS-BDRCLR c! CHGCLR ;
-
 : init-screen ( -- )
     0 0 15 change-color
-    INIGRP
+    init-graphic-mode
     clear-screen
     redefine-tiles ;
 
 : init-sprites ( -- )
-    CLRSPR
-    \ 16x16 sprites
-    SYS-RG1SAV c@ 0b10 or 1 WRTVDP ;
-
-: sprite-name! ( name spriteid -- )
-    CALATR 2 + WRTVRM ;
-
-: sprite-color! ( color spriteid -- )
-    CALATR 3 + WRTVRM ;
-
-: sprite-pos! ( horizontal vertical spriteid -- )
-    CALATR dup 1+ -rot WRTVRM WRTVRM ;
+    clear-sprites set-sprites-16x16 ;
 
 variable sprite-x
 variable sprite-y
@@ -395,28 +338,6 @@ pattern sprite-pattern
     50 8 lshift sprite-y !
     0 0 sprite-name!
     COLOR-WHITE 0 sprite-color! ;
-
-asm: keyboard-status@
-    ; ( line -- status )
-    di
-    in a,(0aah)
-    and 0f0h
-    add a,c
-    out (0aah),a
-    ei
-    in a,(0a9h)
-    ld b,0
-    ld c,a
-    ei
-;asm
-
-: key-status@ ( bitkey -- status )
-    keyboard-status@
-    swap and
-    if 0 else 1 then ;
-
-: KEY-RIGHT 0b10000000 8 ;
-: KEY-LEFT  0b00010000 8 ;
 
 : move-sprite
     \ move sprite right
