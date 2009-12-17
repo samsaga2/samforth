@@ -34,14 +34,14 @@ pattern star-pattern
     127 char-vaddr 7 +
     32 char-vaddr
     do
-        i vram@ dup 1 rshift or i vram!
+        i RDVRM dup 1 rshift or i WRTVRM
     loop ;
 
 : redefine-char ( char addr -- )
     \ tile
-    2dup swap char-vaddr swap 8 -rot ram-to-vram
+    2dup swap char-vaddr swap 8 -rot LDIRVM
     \ color
-    8 + c@ swap char-color-vaddr vram! ;
+    8 + c@ swap char-color-vaddr WRTVRM ;
 
 : show-message
     ." **************************" cr
@@ -50,11 +50,16 @@ pattern star-pattern
     ." <samsaga2@gmail.com>" cr
     ." **************************" cr cr ;
 
+: change-color ( bordercolor backgroundcolor foregroundcolor -- )
+    SYS-FORCLR c! SYS-BAKCLR c! SYS-BDRCLR c! CHGCLR ;
+
 : init-screen
     32 SYS-LINL32 c!
-    init-mode32 0 0 15 change-color
+    INIT32 0 0 15 change-color
     bold-font
     [char] * ['] star-pattern redefine-char ;
 
 : main
-    init-screen show-message abort ;
+    DISSCR
+    init-screen show-message
+    ENASCR abort ;
