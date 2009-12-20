@@ -54,3 +54,6 @@ i: color-pattern
 
 : change-color ( bordercolor backgroundcolor foregroundcolor -- )
     SYS-FORCLR c! SYS-BAKCLR c! SYS-BDRCLR c! CHGCLR ;
+
+: locate-vaddr ( x y -- vaddr )
+    32 * + 0x1800 + ;

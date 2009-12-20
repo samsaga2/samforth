@@ -1,8 +1,22 @@
 #!/usr/bin/python
 
+"""
+Usage: samc.py <input.fs> <output.asm>
+
+  -h, --help               Show this help
+  -i path, --include=path  Include dir
+  --header=file            Asm header file
+  --footer=file            Asm footer file
+
+by Victor Marzo <samsaga2@gmail.com>
+based on CamelForth (http://www.hytherion.com/beattidp/comput/z80forth.htm)
+"""
+
 import sys
 import string
 import StringIO
+import getopt
+import os
 
 class UnableCompile(Exception):
     def __init__(self, word):
@@ -11,18 +25,19 @@ class UnableCompile(Exception):
     def __str__(self):
         return "Unable to compile `" + self.word + "'"
 
-def print_file(filename):
+def print_file(filename, output):
     file = open(filename, "r")
     while True:
         line = file.readline()
         if len(line) == 0:
             break
-        print line,
+        print >>output, line,
     file.close()
 
 class CoreWords:
     def __init__(self, forth):
         self.forth = forth
+        self.includes = ["./"]
 
         # [ name , 0=>intepret/1=>compiled/2=>both , function ]
         words = [
@@ -89,10 +104,10 @@ class CoreWords:
     
     def w_dot(self, input, input_code):
         n = self.forth.psp.pop()
-        sys.stderr.write(str(n) + "\n")
+        print >>sys.stderr, str(n)
     
     def w_dot_psp(self, input, input_code):
-        sys.stderr.write(str(self.forth.psp) + "\n")
+        print >>sys.stderr, str(self.forth.psp)
     
     def w_add(self, input, input_code):
         n1 = self.forth.psp.pop()
@@ -349,9 +364,13 @@ class CoreWords:
     
     def w_include(self, input, input_code):
         word = self.forth.next_word(input_code)
-        file = open(word, 'r')
-        self.forth.interpret(file)
-        file.close()
+        for p in self.includes:
+            filename = p + "/" + word
+            if os.path.exists(filename):
+                file = open(filename, 'r')
+                self.forth.interpret(file)
+                file.close()
+                return
     
     def w_cappend(self, input, input_code):
         n = self.forth.psp.pop()
@@ -411,6 +430,8 @@ class Forth:
         self.freeram = 0xe500 # start of free ram
         self.strings = []
         self.words = [] # words dictionary
+        self.header = "./samforth.begin"
+        self.footer = "./samforth.end"
 
     def new_label(self):
         self.labels += 1
@@ -423,9 +444,9 @@ class Forth:
         has_equ = code.lower().find(" equ ") > 0
         
         if is_label or has_equ:
-            print code
+            print >>self.output, code
         else:
-            print "\t" + code
+            print >>self.output, "\t" + code
 
     def next_word(self, input):
         # skip whitespaces
@@ -453,9 +474,9 @@ class Forth:
         return None
 
     def add_strings(self):
-        print "\n"
+        print >>self.output,"\n"
         for s in self.strings:
-            print s[0] + ":\tdb \"" + s[1] + "\""
+            print >>self.output, s[0] + ":\tdb \"" + s[1] + "\""
 
     def execute(self, word, state, input, input_code=None):
         if input_code == None:
@@ -465,10 +486,10 @@ class Forth:
         word(input, input_code)
 
     def add_header(self):
-        print_file("samforth.begin")
+        print_file(self.header, self.output)
 
     def add_footer(self):
-        print_file("samforth.end")
+        print_file(self.footer, self.output)
 
     def interpret(self, input=sys.stdin, input_code=None):
         if input_code == None:
@@ -504,19 +525,51 @@ class Forth:
                     if self.state == 0 or self.state == 2:
                         self.psp.append(n)
                     elif self.state == 1:
-                        print "\tdw LIT,"+str(n)
+                        print >>self.output, "\tdw LIT,"+str(n)
                 except:
-                    sys.stderr.write("Unknown word `"+word+"/" + str(self.state) + "'")
+                    print >>sys.stderr, "Unknown word `"+word+"/" + str(self.state) + "'"
                     exit(1)
 
-    def compile(self):
+    def compile(self, input_file, output_file = sys.stdout):
+        input = open(input_file, 'r')
+        self.output = open(output_file, 'w')
+
         self.add_header()
-        self.interpret()
+        self.interpret(input)
         self.add_strings()
         self.add_footer()
 
+        input.close()
+        self.output.close()
+
+def show_help(msg):
+    print >>sys.stderr, msg
+    print >>sys.stderr, "for help use --help"
+    sys.exit(2)
+
 if __name__ == '__main__':
+    # parse args
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hi:", ["help", "include=", "header=", "footer="])
+    except getopt.error, msg:
+        show_help(msg)
+
+    # call compiler
     f = Forth()
     core = CoreWords(f)
-    f.compile()
 
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            print >>sys.stderr, __doc__
+            sys.exit(0)
+        elif o in ("-i", "--include"):
+            core.includes.append(a)
+        elif o == "--header":
+            f.header = a
+        elif o == "--footer":
+            f.footer = a
+
+    if len(args) <> 2:
+        show_help("Wrong number of args")
+
+    f.compile(args[0], args[1])

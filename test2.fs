@@ -287,7 +287,7 @@ COLOR-MEDIUM-RED COLOR-BLACK
 variable cursor
 
 : locate ( x y -- )
-    32 * + 0x1800 + cursor ! ;
+    locate-vaddr cursor ! ;
 
 : 1+! ( addr -- )
     dup @ 1+ swap ! ;
