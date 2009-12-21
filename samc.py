@@ -164,6 +164,7 @@ class CoreWords:
         self.forth.emit_asm("\n\n\t; " + word)
         self.forth.emit_asm(label+":")
         self.forth.emit_asm("call DOCOLON")
+        self.forth.latest = label
         self.forth.rsp.append(label)
     
         # add compilation func
@@ -268,7 +269,7 @@ class CoreWords:
         self.forth.execute("branch", 1, input)
         label = self.forth.rsp.pop()
         self.forth.rsp.append(label)
-        self.forth.emit_asm("dw "+label+"+3")
+        self.forth.emit_asm("dw " + self.forth.latest + "+3")
         
     def w_if(self, input, input_code):
         label = self.forth.new_label()
