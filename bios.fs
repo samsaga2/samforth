@@ -518,8 +518,8 @@ FCC5 const SYS-SLTTBL	\ Mirror of slot 0 secondary slot selection register.
 \ E               None.
 \ R               Character code in [Acc].
 \ M               AF
-: CHGET \ TODO
-    0 0 0 0 009F SYSCALL 4drop ;
+: CHGET
+    0 0 0 0 009F SYSCALL 3drop 8 rshift ;
 
 
 \ F               Outputs a character to the console.

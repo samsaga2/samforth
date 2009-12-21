@@ -921,3 +921,10 @@ SYSCALL:
     ld e,(ix-1) ; restore de reg
     ld d,(ix-2)
 ;asm
+
+\ 8 bits random number
+variable r_seed
+: rnd8 ( -- n )
+    r_seed @ 221 * 53 + 255 and dup r_seed ! ;
+
+

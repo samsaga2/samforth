@@ -55,5 +55,14 @@ i: color-pattern
 : change-color ( bordercolor backgroundcolor foregroundcolor -- )
     SYS-FORCLR c! SYS-BAKCLR c! SYS-BDRCLR c! CHGCLR ;
 
+: base-screen ( -- vaddr )
+  0x1800 ;
+
 : locate-vaddr ( x y -- vaddr )
-    32 * + 0x1800 + ;
+    32 * + base-screen + ;
+
+: vram! ( data vaddr -- )
+    WRTVRM ;
+
+: vram@ ( vaddr -- n )
+    RDVRM ;
