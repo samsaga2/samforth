@@ -78,6 +78,7 @@ class CoreWords:
             ["while", 1, self.w_while],
             ["variable", 0, self.w_variable],
             ["array", 0, self.w_array],
+            ["carray", 0, self.w_carray],
             ["const", 0, self.w_const],
             ["INCLUDE", 0, self.w_include],
             ["c,", 0, self.w_cappend],
@@ -346,6 +347,13 @@ class CoreWords:
         var = ": " + word + " " + hex(self.forth.freeram)  + " ;"
         self.forth.interpret(StringIO.StringIO(var))
         self.forth.freeram += len*2
+    
+    def w_carray(self, input, input_code):
+        len = self.forth.psp.pop()
+        word = self.forth.next_word(input_code)
+        var = ": " + word + " " + hex(self.forth.freeram)  + " ;"
+        self.forth.interpret(StringIO.StringIO(var))
+        self.forth.freeram += len
     
     def w_lit(self, input, input_code, value):
         self.forth.psp.append(value)

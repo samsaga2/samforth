@@ -56,10 +56,13 @@ i: color-pattern
     SYS-FORCLR c! SYS-BAKCLR c! SYS-BDRCLR c! CHGCLR ;
 
 : base-screen ( -- vaddr )
-  0x1800 ;
+    0x1800 ;
+
+: locate-addr ( x y -- addr )
+    32 * + ;
 
 : locate-vaddr ( x y -- vaddr )
-    32 * + base-screen + ;
+    locate-addr base-screen + ;
 
 : vram! ( data vaddr -- )
     WRTVRM ;

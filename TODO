@@ -2,4 +2,4 @@
 * add DOLIT to reduce code size of variables
 * interpreted conditionals and loops
 * implement does>
-
+* implement case of endof
