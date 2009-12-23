@@ -491,8 +491,11 @@ class Forth:
         if input_code == None:
             input_code = input
 
-        word = self.find_word(word, state)
-        word(input, input_code)
+        f = self.find_word(word, state)
+        if f == None:
+            print >>sys.stderr, "Unknown word `"+word+"/" + str(state) + "'"
+            exit(1)
+        f(input, input_code)
 
     def add_header(self):
         print_file(self.header, self.output)
