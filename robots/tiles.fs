@@ -303,9 +303,30 @@ COLOR-DARK-BLUE COLOR-DARK-BLUE
 COLOR-DARK-BLUE COLOR-DARK-BLUE
 COLOR-DARK-BLUE COLOR-DARK-BLUE
 
+pattern explosion-pattern
+0b00010000
+0b01010100
+0b00111000
+0b11111110
+0b00111000
+0b01010100
+0b00010000
+0b00000000
+
+color-pattern explosion-color
+COLOR-DARK-RED   COLOR-DARK-BLUE
+COLOR-DARK-RED   COLOR-DARK-BLUE
+COLOR-MEDIUM-RED COLOR-DARK-BLUE
+COLOR-LIGHT-RED  COLOR-DARK-BLUE
+COLOR-MEDIUM-RED COLOR-DARK-BLUE
+COLOR-DARK-RED   COLOR-DARK-BLUE
+COLOR-DARK-RED   COLOR-DARK-BLUE
+COLOR-DARK-RED   COLOR-DARK-BLUE
+
 0 const floor-tile
 1 const player-tile
 2 const robot-tile
+3 const explosion-tile
 
 : redefine-char ( pattern char -- )
     ['] char-color swap redefine-tile ;
@@ -344,7 +365,8 @@ COLOR-DARK-BLUE COLOR-DARK-BLUE
 : redefine-graphics ( -- )
     ['] player-pattern ['] player-color player-tile redefine-tile
     ['] robot-pattern ['] robot-color robot-tile redefine-tile
-    ['] floor-pattern ['] floor-color floor-tile redefine-tile ;
+    ['] floor-pattern ['] floor-color floor-tile redefine-tile
+    ['] explosion-pattern ['] explosion-color explosion-tile redefine-tile ;
 
 : redefine-tiles ( -- )
     clear-tiles
