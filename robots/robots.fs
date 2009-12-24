@@ -8,7 +8,7 @@ INCLUDE random.fs
 
 \ screen =============================================
 
-32 24 * const screen-size
+32 23 * const screen-size
 screen-size carray backscreen
 
 : init-screen ( -- )
@@ -23,13 +23,13 @@ screen-size carray backscreen
     backscreen screen-size floor-tile fill ;
 
 : print-backscreen ( -- )
-    screen-size base-screen backscreen LDIRVM ;
+    screen-size base-screen 32 + backscreen LDIRVM ;
 
 \ position ===========================================
 
 : random-pos ( -- x y )
     rnd8 32 mod
-    rnd8 24 mod ;
+    rnd8 23 mod ;
 
 : pos! ( x y addr -- )
     2dup 1+ c! nip c! ;
@@ -219,7 +219,7 @@ variable robots-count
         then
     then
     dup 31 = if \ down
-        player-pos pos@y 23 < if
+        player-pos pos@y 22 < if
             1 player-pos pos!+y
         then
     then
@@ -240,23 +240,45 @@ variable level
 : next-level ( -- )
     level @ 1+ setup-level ;
 
+: print-score ( -- )
+    0 0 locate s" SCORE XXXXX" type
+    15 0 locate s" SAFE TELEPORTS XX" type ;
+
 : print-game ( -- )
     clear-backscreen
-    \ TODO print score
+    print-score
     \ TODO print safe teleports
     print-player
     print-robots
     robots-collision
     print-backscreen ;
 
+: show-dead-message ( -- )
+    13 9 locate s" HA HA" type
+    10 10 locate s" PLAYER DEAD" type
+    10 11 locate s" ROBOTS COOL" type
+    11 13 locate s" GAME OVER" type
+    CHGET drop ;
+
+: show-next-level-message ( -- )
+    14 10 locate s" SHIT" type
+    9 11 locate s" LEVEL COMPLETE" type
+    CHGET drop ;
+
+: show-level-message ( -- )
+    12 10 locate s" LEVEL XX" type
+    CHGET drop ;
+
 : move-game ( -- )
     all-robots-disabled if
-        \ robots dead
-        \ TODO print congratulations
+        \ change to next level
+        show-next-level-message
         next-level
+        print-game
+        show-level-message
     else
         player-collision if
-            \ player dead
+            show-dead-message
             1 setup-level
         else
             \ game step

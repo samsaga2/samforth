@@ -284,26 +284,6 @@ COLOR-MEDIUM-RED COLOR-BLACK
     ['] Y-pattern [char] Y redefine-char
     ['] Z-pattern [char] Z redefine-char ;
 
-variable cursor
-
-: locate ( x y -- )
-    locate-vaddr cursor ! ;
-
-: 1+! ( addr -- )
-    dup @ 1+ swap ! ;
-
-: emit ( n -- )
-    cursor @ WRTVRM 
-    cursor 1+! ;
-
-: type ( c-addr +n -- )
-    ?dup if
-        over + swap do i c@ emit loop
-    else drop then ;
-
-: cr ( -- )
-    cursor @ 0b1111111111100000 and 32 + cursor ! ;
-
 : show-message ( -- )
     0 0 locate
     s" BY" type cr

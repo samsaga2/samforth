@@ -323,10 +323,10 @@ COLOR-DARK-RED   COLOR-DARK-BLUE
 COLOR-DARK-RED   COLOR-DARK-BLUE
 COLOR-DARK-RED   COLOR-DARK-BLUE
 
-0 const floor-tile
 1 const player-tile
 2 const robot-tile
 3 const explosion-tile
+4 const floor-tile
 
 : redefine-char ( pattern char -- )
     ['] char-color swap redefine-tile ;
