@@ -52,38 +52,13 @@ screen-size carray backscreen
 \ player =============================================
 
 variable player-pos
+variable safe-teleports
 
 : random-player ( -- )
     random-pos player-pos pos! ;
 
 : print-player ( -- )
     player-tile player-pos pos@ locate-addr backscreen + c! ;
-
-: move-player ( -- )
-    CHGET
-    dup 28 = if \ right
-        player-pos pos@x 31 < if
-            1 player-pos pos!+x
-        then
-    then
-    dup 29 = if \ left
-        player-pos pos@x 0 > if
-            -1 player-pos pos!+x
-        then
-    then
-    dup 30 = if \ up
-        player-pos pos@y 0 > if
-            -1 player-pos pos!+y
-        then
-    then
-    dup 31 = if \ down
-        player-pos pos@y 23 < if
-            1 player-pos pos!+y
-        then
-    then
-    32 = if \ teleport
-        random-player
-    then ;
         
 \ robots =============================================
 
@@ -157,6 +132,19 @@ variable robots-count
 : robot-explosion ( robot -- )
     explosion-tile swap print-robot ;
 
+: count-enabled-robots ( -- )
+    0
+    robots-count @ 0 do
+        i is-robot-enabled if
+            1+
+        then
+    loop ;
+
+: all-robots-disabled ( -- )
+    count-enabled-robots 0 = ;
+
+\ collisions =========================================
+
 : robots-crash ( robot1 robot2 -- )
     2dup <> if
         \ TODO very slow line
@@ -184,22 +172,67 @@ variable robots-count
         then
     loop ;
 
-: count-enabled-robots ( -- )
-    0
-    robots-count @ 0 do
-        i is-robot-enabled if
-            1+
-        then
-    loop ;
+: player-robot-collision ( robot -- )
+    2* robots-pos + @ player-pos @ = ;
 
-: all-robots-disabled ( -- )
-    count-enabled-robots 0 = ;
+: player-collision ( -- )
+    0 robots-count @ 0 do
+        i is-robot-enabled if
+            i player-robot-collision if
+                drop 1
+            then
+        then
+    loop
+    0 <> ;
+
+\ player movement ====================================
+
+: safe-random-player ( -- )
+    random-player
+    player-collision if
+        recurse
+    then ;
+
+: teleport-player ( -- )
+    safe-teleports @ 0 > if
+        safe-random-player
+        safe-teleports @ 1- safe-teleports !
+    else
+        random-player
+    then ;
+
+: move-player ( -- )
+    CHGET
+    dup 28 = if \ right
+        player-pos pos@x 31 < if
+            1 player-pos pos!+x
+        then
+    then
+    dup 29 = if \ left
+        player-pos pos@x 0 > if
+            -1 player-pos pos!+x
+        then
+    then
+    dup 30 = if \ up
+        player-pos pos@y 0 > if
+            -1 player-pos pos!+y
+        then
+    then
+    dup 31 = if \ down
+        player-pos pos@y 23 < if
+            1 player-pos pos!+y
+        then
+    then
+    32 = if \ teleport
+        teleport-player
+    then ;
 
 \ game ===============================================
 
 variable level
 
 : setup-level ( level -- )
+    dup safe-teleports !
     dup level !
     2 * 2 + random-robots
     random-player ;
@@ -207,21 +240,34 @@ variable level
 : next-level ( -- )
     level @ 1+ setup-level ;
 
-: play-game ( -- )
+: print-game ( -- )
     clear-backscreen
     \ TODO print score
+    \ TODO print safe teleports
     print-player
     print-robots
     robots-collision
-    print-backscreen
+    print-backscreen ;
+
+: move-game ( -- )
     all-robots-disabled if
+        \ robots dead
         \ TODO print congratulations
         next-level
     else
-        move-player
-        move-robots
-    then
-    \ TODO test player collision
+        player-collision if
+            \ player dead
+            1 setup-level
+        else
+            \ game step
+            move-player
+            move-robots
+        then
+    then ;
+
+: play-game ( -- )
+    print-game
+    move-game
     recurse ;
 
 : main
