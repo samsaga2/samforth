@@ -161,7 +161,6 @@ variable robots-count
     then ;
 
 : robots-collision ( -- )
-    \ TODO bug when three robots collide?
     robots-count @ 0 do
         i is-robot-enabled if
             robots-count @ 0 do
@@ -277,7 +276,7 @@ variable level
         print-game
         show-level-message
     else
-        player-collision if
+        player-collision count-enabled-robots 1 = or if
             show-dead-message
             1 setup-level
         else
@@ -296,5 +295,7 @@ variable level
     init-screen
     1 r_seed ! \ TODO random seed
     1 setup-level
+    print-game
+    show-level-message
     play-game
     abort ;
