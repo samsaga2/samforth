@@ -1,3 +1,94 @@
+pattern 0-pattern
+0b01111100
+0b11000110
+0b10100110
+0b10100110
+0b10010110
+0b10001110
+0b11111100
+0b00000000
+pattern 1-pattern
+0b00001110
+0b00010110
+0b00100110
+0b00000110
+0b00000110
+0b00000110
+0b00000110
+0b00000000
+pattern 2-pattern
+0b01111110
+0b10000110
+0b00000110
+0b01111100
+0b10000000
+0b10000000
+0b11111110
+0b00000000
+pattern 3-pattern
+0b01111110
+0b10000110
+0b00000110
+0b00001110
+0b00000110
+0b10000110
+0b11111100
+0b00000000
+pattern 4-pattern
+0b10000110
+0b10000110
+0b10000110
+0b11111110
+0b00000110
+0b00000110
+0b00000110
+0b00000000
+pattern 5-pattern
+0b01111110
+0b10000000
+0b10000000
+0b11111110
+0b00000110
+0b00000110
+0b11111100
+0b00000000
+pattern 6-pattern
+0b01111110
+0b10000000
+0b10000000
+0b11111110
+0b10000110
+0b10000110
+0b11111100
+0b00000000
+pattern 7-pattern
+0b01111110
+0b00000110
+0b00000110
+0b00001110
+0b00000110
+0b00000110
+0b00000110
+0b00000000
+pattern 8-pattern
+0b01111110
+0b10000110
+0b10000110
+0b11111110
+0b10000110
+0b10000110
+0b11111100
+0b00000000
+pattern 9-pattern
+0b01111110
+0b10000110
+0b10000110
+0b11111110
+0b00000110
+0b00000110
+0b00000110
+0b00000000
+
 pattern A-pattern
 0b11111100
 0b10000110
@@ -335,6 +426,16 @@ COLOR-DARK-RED   COLOR-DARK-BLUE
     0 0x2000 0x2000 FILVRM ;
 
 : redefine-chars ( -- )
+    ['] 0-pattern [char] 0 redefine-char
+    ['] 1-pattern [char] 1 redefine-char
+    ['] 2-pattern [char] 2 redefine-char
+    ['] 3-pattern [char] 3 redefine-char
+    ['] 4-pattern [char] 4 redefine-char
+    ['] 5-pattern [char] 5 redefine-char
+    ['] 6-pattern [char] 6 redefine-char
+    ['] 7-pattern [char] 7 redefine-char
+    ['] 8-pattern [char] 8 redefine-char
+    ['] 9-pattern [char] 9 redefine-char
     ['] A-pattern [char] A redefine-char
     ['] B-pattern [char] B redefine-char
     ['] C-pattern [char] C redefine-char 

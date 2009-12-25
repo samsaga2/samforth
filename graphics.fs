@@ -98,3 +98,6 @@ variable cursor
 
 : cr ( -- )
     cursor @ 0b1111111111100000 and 32 + cursor ! ;
+
+: space ( -- )
+    32 emit ;

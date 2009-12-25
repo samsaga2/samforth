@@ -25,6 +25,9 @@ screen-size carray backscreen
 : print-backscreen ( -- )
     screen-size base-screen 32 + backscreen LDIRVM ;
 
+: . ( n -- )
+    <# 0 #s #> type space ;
+
 \ position ===========================================
 
 : random-pos ( -- x y )
@@ -53,6 +56,7 @@ screen-size carray backscreen
 
 variable player-pos
 variable safe-teleports
+variable score
 
 : random-player ( -- )
     random-pos player-pos pos! ;
@@ -231,6 +235,7 @@ variable robots-count
 variable level
 
 : setup-level ( level -- )
+    score @ 100 + score !
     dup safe-teleports !
     dup level !
     2 * 2 + random-robots
@@ -240,8 +245,8 @@ variable level
     level @ 1+ setup-level ;
 
 : print-score ( -- )
-    0 0 locate s" SCORE XXXXX" type
-    15 0 locate s" SAFE TELEPORTS XX" type ;
+    0 0 locate s" SCORE " type score @ .
+    15 0 locate s" SAFE TELEPORTS " type safe-teleports @ . ;
 
 : print-game ( -- )
     clear-backscreen
@@ -265,8 +270,17 @@ variable level
     CHGET drop ;
 
 : show-level-message ( -- )
-    12 10 locate s" LEVEL XX" type
+    12 10 locate s" LEVEL " type level @ .
     CHGET drop ;
+
+: new-game ( -- )
+    0 score !
+    1 setup-level ;
+
+: dec-score ( -- )
+    score @ 0 > if
+        score @ 1- score !
+    then ;
 
 : move-game ( -- )
     all-robots-disabled if
@@ -278,11 +292,12 @@ variable level
     else
         player-collision count-enabled-robots 1 = or if
             show-dead-message
-            1 setup-level
+            new-game
         else
             \ game step
             move-player
             move-robots
+            dec-score
         then
     then ;
 
@@ -294,7 +309,8 @@ variable level
 : main
     init-screen
     1 r_seed ! \ TODO random seed
-    1 setup-level
+    decimal
+    new-game
     print-game
     show-level-message
     play-game
