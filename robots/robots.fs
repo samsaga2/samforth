@@ -84,18 +84,6 @@ variable robots-count
     max-robots 0 do
         i disable-robot
     loop ;
-    
-: random-robot ( robot -- )
-    \ TODO check for free cell
-    dup enable-robot
-    random-pos rot 2* robots-pos + pos! ;
-
-: random-robots ( n -- )
-    dup robots-count !
-    disable-robots
-    0 do
-        i random-robot
-    loop ;
 
 : move-robot ( robot -- )
     2* robots-pos +
@@ -146,12 +134,15 @@ variable robots-count
 
 : all-robots-disabled ( -- )
     count-enabled-robots 0 = ;
+    
+: random-robot ( robot -- )
+    dup enable-robot
+    random-pos rot 2* robots-pos + pos! ;
 
 \ collisions =========================================
 
 : robots-crash ( robot1 robot2 -- )
     2dup <> if
-        \ TODO very slow line
         over 2* robots-pos + @
         over 2* robots-pos + @
         = if
@@ -164,14 +155,17 @@ variable robots-count
         2drop
     then ;
 
+: robot-collision ( robot -- )
+    robots-count @ 0 do
+        i is-robot-enabled if
+            dup i robots-crash
+        then
+    loop drop ;
+            
 : robots-collision ( -- )
     robots-count @ 0 do
         i is-robot-enabled if
-            robots-count @ 0 do
-                i is-robot-enabled if
-                    i j robots-crash
-                then
-            loop
+            i robot-collision
         then
     loop ;
 
@@ -188,7 +182,7 @@ variable robots-count
     loop
     0 <> ;
 
-\ player movement ====================================
+\ level ==============================================
 
 : safe-random-player ( -- )
     random-player
@@ -230,13 +224,28 @@ variable robots-count
         teleport-player
     then ;
 
+: safe-random-robot ( robot -- )
+    dup random-robot
+    dup robot-collision if
+        recurse
+    else
+        drop
+    then ;
+
+: random-robots ( n -- )
+    dup robots-count !
+    disable-robots
+    0 do
+        i safe-random-robot
+    loop ;
+
 \ game ===============================================
 
 variable level
 
 : setup-level ( level -- )
     score @ 100 + score !
-    dup safe-teleports !
+    dup 5 min safe-teleports !
     dup level !
     2 * 2 + random-robots
     random-player ;
@@ -245,13 +254,12 @@ variable level
     level @ 1+ setup-level ;
 
 : print-score ( -- )
-    0 0 locate s" SCORE " type score @ .
+    0 0 locate s" SCORE " type score @ . s"  " type
     15 0 locate s" SAFE TELEPORTS " type safe-teleports @ . ;
 
 : print-game ( -- )
     clear-backscreen
     print-score
-    \ TODO print safe teleports
     print-player
     print-robots
     robots-collision
