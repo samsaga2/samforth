@@ -476,6 +476,14 @@ asm: unloop
     inc ix
 ;asm
 
+asm: exit
+    ; ( -- ) ( r: sys -- )
+    ld e,(ix+0) ; pop RST to PC
+    inc ix
+    ld d,(ix+0)
+    inc ix
+;asm
+
 \ multiply and divide ======================================
 asm: um*
     ; ( u1 u2 - ud )
