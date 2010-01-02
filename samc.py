@@ -71,6 +71,7 @@ class CoreWords:
             ["else", 1, self.w_else],
             ["do", 1, self.w_do],
             ["loop", 1, self.w_loop],
+            ["+loop", 1, self.w_plusloop],
             ["begin", 1, self.w_begin],
             ["until", 1, self.w_until],
             ["again", 1, self.w_again],
@@ -301,6 +302,11 @@ class CoreWords:
     
     def w_loop(self, input, input_code):
         self.forth.execute("(loop)", 1, input)
+        label = self.forth.rsp.pop()
+        self.forth.emit_asm("dw " + label)
+
+    def w_plusloop(self, input, input_code):
+        self.forth.execute("(+loop)", 1, input)
         label = self.forth.rsp.pop()
         self.forth.emit_asm("dw " + label)
     
