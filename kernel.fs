@@ -103,6 +103,37 @@ asm: r@
 : nip ( x y -- y ) swap drop ;
 : tuck ( x y -- y x y ) swap over ;
 
+asm: sp@
+    ; ( -- a-addr )
+    push bc
+    ld hl,0
+    add hl,sp
+    ld b,h
+    ld c,l
+;asm
+
+asm: sp!
+    ; ( a-addr -- )
+    ld h,b
+    ld l,c
+    ld sp,hl
+    pop bc
+;asm
+
+asm: rp@
+    ; ( -- a-addr )
+    push bc
+    push ix
+    pop bc
+;asm
+
+asm: rp!
+    ; ( a-addr -- )
+    push bc
+    pop ix
+    pop bc
+;asm
+
 \ memory operations ========================================
 asm: !
     ; ( n addr -- )
@@ -950,3 +981,13 @@ asm: (rnd8)
 
 : rnd8 ( -- n )
     r_seed @ (rnd8) swap r_seed ! ;
+
+: depth ( -- n )
+    s0 sp@ - cell / ;
+
+: .s ( -- )
+    decimal
+    s0 sp@ do
+        i @ .
+    cell +loop ;
+
