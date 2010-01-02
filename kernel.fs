@@ -961,27 +961,6 @@ SYSCALL:
     ld d,(ix-2)
 ;asm
 
-\ 8 bits random number
-variable r_seed
-
-asm: (rnd8)
-    ; ( seed -- seed n )
-    ; http://es.msx.org/forumtopic4941.html
-    ld h,b
-    ld l,c
-    add hl,hl
-    sbc a,a
-    and 83h
-    xor c
-    ld c,a
-    push hl
-    xor h
-    ld l,c
-;asm
-
-: rnd8 ( -- n )
-    r_seed @ (rnd8) swap r_seed ! ;
-
 : depth ( -- n )
     s0 sp@ - cell / ;
 
