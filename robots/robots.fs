@@ -224,19 +224,11 @@ variable robots-count
         teleport-player
     then ;
 
-: safe-random-robot ( robot -- )
-    dup random-robot
-    dup robot-collision if
-        recurse
-    else
-        drop
-    then ;
-
 : random-robots ( n -- )
     dup robots-count !
     disable-robots
     0 do
-        i safe-random-robot
+        i random-robot \ TODO safe-random-robot
     loop ;
 
 \ game ===============================================
@@ -248,7 +240,7 @@ variable level
     dup 5 min safe-teleports !
     dup level !
     2 * 2 + random-robots
-    random-player ;
+    safe-random-player ;
 
 : next-level ( -- )
     level @ 1+ setup-level ;
@@ -314,10 +306,13 @@ variable level
     move-game
     recurse ;
 
-: main
-    init-screen
-    1 r_seed ! \ TODO random seed
+: init-game ( -- )
     decimal
+    1 r_seed ! \ TODO random seed
+    init-screen ;
+
+: main
+    init-game
     new-game
     print-game
     show-level-message
