@@ -77,10 +77,10 @@ variable robots-count
 : disable-robot ( robot -- )
     0 swap robots-enabled + c! ;
 
-: is-robot-enabled ( robot -- n )
+: robot-enabled? ( robot -- n )
     robots-enabled + c@ 0 <> ;
 
-: disable-robots ( -- )
+: disable-all-robots ( -- )
     max-robots 0 do
         i disable-robot
     loop ;
@@ -101,81 +101,86 @@ variable robots-count
     then
     drop ;
 
-: move-robots ( -- )
+: move-all-robots ( -- )
     robots-count @ 0 do
-        i is-robot-enabled if
+        i robot-enabled? if
             i move-robot
         then
     loop ;
 
+: robot-addr ( robot -- )
+    2* robots-pos + ;
+
 : robot-pos@ ( robot -- x y )
-    2* robots-pos + pos@ ;
+    robot-addr pos@ ;
+
+: robot-pos! ( robot x y -- )
+    rot robot-addr pos! ;
 
 : print-robot ( tile robot -- )
     robot-pos@ locate-addr backscreen + c! ;
 
-: print-robots ( -- )
+: print-all-robots ( -- )
     robots-count @ 0 do
-        i is-robot-enabled if
+        i robot-enabled? if
             robot-tile i print-robot
         then
     loop ;
 
-: robot-explosion ( robot -- )
+: explode-robot ( robot -- )
+    dup disable-robot
     explosion-tile swap print-robot ;
 
 : count-enabled-robots ( -- )
     0
     robots-count @ 0 do
-        i is-robot-enabled if
+        i robot-enabled? if
             1+
         then
     loop ;
 
-: all-robots-disabled ( -- )
+: all-robots-disabled? ( -- )
     count-enabled-robots 0 = ;
     
 : random-robot ( robot -- )
     dup enable-robot
-    random-pos rot 2* robots-pos + pos! ;
+    random-pos robot-pos! ;
 
 \ collisions =========================================
 
-: robots-crash ( robot1 robot2 -- )
+: robots-collide? ( robot1 robot2 -- )
     2dup <> if
         over 2* robots-pos + @
         over 2* robots-pos + @
         = if
-            dup disable-robot robot-explosion
-            dup disable-robot robot-explosion
+            1
         else
-            2drop
+            2drop 0
         then
     else
-        2drop
+        2drop 0
     then ;
-
-: robot-collision ( robot -- )
-    robots-count @ 0 do
-        i is-robot-enabled if
-            dup i robots-crash
-        then
-    loop drop ;
             
 : robots-collision ( -- )
     robots-count @ 0 do
-        i is-robot-enabled if
-            i robot-collision
+        i robot-enabled? if
+            robots-count @ 0 do
+                i robot-enabled? if
+                    i j robots-collide? if
+                        i explode-robot j explode-robot
+                    then
+                then
+            loop
         then
     loop ;
 
-: player-robot-collision ( robot -- )
-    2* robots-pos + @ player-pos @ = ;
+: player-collide-with-robot? ( robot -- )
+    robot-addr @ player-pos @ = ;
 
-: player-collision ( -- )
+: player-collision? ( -- collide? )
     0 robots-count @ 0 do
-        i is-robot-enabled if
-            i player-robot-collision if
+        i robot-enabled? if
+            i player-collide-with-robot? if
                 drop 1
             then
         then
@@ -186,7 +191,7 @@ variable robots-count
 
 : safe-random-player ( -- )
     random-player
-    player-collision if
+    player-collision? if
         recurse
     then ;
 
@@ -224,11 +229,21 @@ variable robots-count
         teleport-player
     then ;
 
+: safe-random-robot ( robot -- )
+    dup random-robot
+    robots-count @ 0 do
+        i robot-enabled? if
+            dup i robots-collide? if
+                unloop recurse
+            then
+        then
+    loop drop ;
+
 : random-robots ( n -- )
     dup robots-count !
-    disable-robots
+    disable-all-robots
     0 do
-        i random-robot \ TODO safe-random-robot
+        i safe-random-robot
     loop ;
 
 \ game ===============================================
@@ -253,7 +268,7 @@ variable level
     clear-backscreen
     print-score
     print-player
-    print-robots
+    print-all-robots
     robots-collision
     print-backscreen ;
 
@@ -282,21 +297,23 @@ variable level
         score @ 1- score !
     then ;
 
+: player-dead? ( -- dead? )
+    player-collision? count-enabled-robots 1 = or ;
+
 : move-game ( -- )
-    all-robots-disabled if
+    all-robots-disabled? if
         \ change to next level
         show-next-level-message
         next-level
         print-game
         show-level-message
     else
-        player-collision count-enabled-robots 1 = or if
+        player-dead? if
             show-dead-message
             new-game
         else
-            \ game step
             move-player
-            move-robots
+            move-all-robots
             dec-score
         then
     then ;
