@@ -163,15 +163,13 @@ variable robots-count
             
 : robots-collision ( -- )
     robots-count @ 0 do
-        i robot-enabled? if
-            robots-count @ 0 do
-                i robot-enabled? if
-                    i j robots-collide? if
-                        i explode-robot j explode-robot
-                    then
+        robots-count @ 0 do
+            j robot-enabled? i robot-enabled? and if
+                i j robots-collide? if
+                    i explode-robot j explode-robot
                 then
-            loop
-        then
+            then
+        loop
     loop ;
 
 : player-collide-with-robot? ( robot -- )
